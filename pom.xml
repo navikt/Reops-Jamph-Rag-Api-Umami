@@ -164,6 +164,13 @@
             <version>${kotlin.version}</version>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>com.github.jsqlparser</groupId>
+            <artifactId>jsqlparser</artifactId>
+            <version>4.9</version>
+        </dependency>
+        
         <dependency>
             <groupId>io.ktor</groupId>
             <artifactId>ktor-server-test-host-jvm</artifactId>
@@ -183,6 +190,7 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+    
 
     <build>
         <sourceDirectory>src/main/kotlin</sourceDirectory>
