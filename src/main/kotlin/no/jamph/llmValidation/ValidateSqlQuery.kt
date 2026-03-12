@@ -1,29 +1,24 @@
+package no.jamph.llmValidation
+
 import net.sf.jsqlparser.JSQLParserException
 import net.sf.jsqlparser.parser.CCJSqlParserManager
 import java.io.StringReader
 
+private val BLOCKED = Regex(
+    "\\b(DELETE|DROP|TRUNCATE|UPDATE|INSERT|ALTER|MERGE|REPLACE|CREATE)\\b",
+    RegexOption.IGNORE_CASE
+)
+
 // Function that validates SQL 
 fun isSqlQueryValid(sql: String): Boolean {
     
-    // Check if SQL is empty
-    if (sql.trim().isEmpty()) {
-        return false
-    }
-
-    // List of valid SQL commands
-    val pattern = Regex(
-        "\\b(SELECT|INSERT|UPDATE|DELETE|WITH|CREATE|DROP|SHOW|DESCRIBE)\\b",
-        RegexOption.IGNORE_CASE
-    )
-
-    if (!pattern.containsMatchIn(sql)) {
-        return false
-    }
+    if (sql.isBlank()) return false  // Check if SQL is empty
+    if (BLOCKED.containsMatchIn(sql)) return false  // Check if SQL query contains dangerous commands
 
     return try {
         // Try formatting/parsing to catch syntax error
-        val parser = CCJSqlParserManager()
-        parser.parse(StringReader(sql))
+        CCJSqlParserManager().parse(StringReader(sql))
+        true
     } catch (e: JSQLParserException) {
         false
     }
