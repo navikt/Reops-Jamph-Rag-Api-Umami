@@ -13,7 +13,8 @@ fun estimateCostInMB (sql: String) : Double {
         .build()
 
     
-    val job = bigquery.create(JobInfo.of(config))
+    // Execute the query as a dry run to get the statistics without actually running it
+    val job = bigquery.create(JobInfo.of(config)) 
     val bytesProcessed: Double = job.statistics.query.totalBytesProcessed ?: 0L 
 
     return bytesProcessed / (1024 * 1024) // Convert to MB
