@@ -1,0 +1,22 @@
+name: Auto-merge trusted PRs
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  auto-merge:
+    runs-on: ubuntu-latest
+    if: |
+      github.event.pull_request.user.login == 'PerErikGronvik' ||
+      github.event.pull_request.user.login == 'JulianNymark'
+    permissions:
+      pull-requests: write
+      contents: write
+    steps:
+      - name: Auto-merge PR
+        run: gh pr merge --merge --auto "${{ github.event.pull_request.html_url }}"
+        env:
+          GH_TOKEN: ${{ secrets.TRUSTED_MERGE_PAT }}
+
+
