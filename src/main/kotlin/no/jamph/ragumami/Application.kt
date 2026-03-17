@@ -14,7 +14,8 @@ import io.ktor.http.*
 import org.slf4j.event.Level
 import org.slf4j.LoggerFactory
 import no.jamph.ragumami.core.llm.OllamaClient
-import no.jamph.ragumami.core.bigquery.BigQuerySchemaService
+import no.jamph.bigquery.BigQueryQueryService
+import no.jamph.bigquery.BigQuerySchemaService
 import no.jamph.ragumami.umami.domain.UmamiRAGService
 
 private val log = LoggerFactory.getLogger("Application")
@@ -69,7 +70,7 @@ fun Application.configureRouting() {
     
     val ollamaClient = OllamaClient(ollamaBaseUrl, ollamaModel)
     
-    // Initialize BigQuery service if credentials are available
+    // Initialize BigQuery services if credentials are available
     val bigQueryService = try {
         val projectId = environment.config.propertyOrNull("bigquery.projectId")?.getString()
             ?: System.getenv("BIGQUERY_PROJECT_ID")
@@ -81,7 +82,8 @@ fun Application.configureRouting() {
             ?: System.getenv("GOOGLE_APPLICATION_CREDENTIALS")
         
         if (projectId != null && dataset != null) {
-            BigQuerySchemaService(projectId, dataset, location, credentialsPath)
+            val queryService = BigQueryQueryService(projectId, dataset, location, credentialsPath)
+            BigQuerySchemaService(queryService)
         } else {
             null
         }
