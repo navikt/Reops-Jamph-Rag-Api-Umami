@@ -1,11 +1,6 @@
-package no.jamph.ragumami.core.bigquery
+package no.jamph.bigquery
 
-import com.google.auth.oauth2.GoogleCredentials
-import com.google.cloud.bigquery.BigQuery
-import com.google.cloud.bigquery.BigQueryOptions
-import com.google.cloud.bigquery.FieldList
 import com.google.cloud.bigquery.QueryJobConfiguration
-import java.io.FileInputStream
 
 data class Website(
     val websiteId: String,
@@ -26,32 +21,16 @@ data class TableSchema(
 )
 
 class BigQuerySchemaService(
-    private val projectId: String,
-    private val dataset: String,
-    private val location: String = "europe-north1",
-    credentialsPath: String? = null
+    private val queryService: BigQueryQueryService,
 ) {
-    private val bigQuery: BigQuery
-
-    init {
-        val builder = BigQueryOptions.newBuilder()
-            .setProjectId(projectId)
-            .setLocation(location)
-
-        if (!credentialsPath.isNullOrBlank()) {
-            try {
-                val credentials = GoogleCredentials.fromStream(FileInputStream(credentialsPath))
-                builder.setCredentials(credentials)
-            } catch (e: Exception) {
-                throw IllegalStateException("Failed to load BigQuery credentials from: $credentialsPath", e)
-            }
-        }
-
-        bigQuery = builder.build().service
-    }
+    private val bigQuery = queryService.bigQuery
+    private val projectId = queryService.projectId
+    private val dataset = queryService.dataset
 
     /**
-     * Fetches all websites from the public_website table
+     * Fetches all websites from the public_website table.
+     *
+     * Uses BigQueryQueryService to execute SQL (so auth/client setup lives in one place).
      */
     fun getWebsites(): List<Website> {
         val query = """
@@ -65,11 +44,7 @@ class BigQuerySchemaService(
         """.trimIndent()
 
         return try {
-            val queryConfig = QueryJobConfiguration.newBuilder(query)
-                .setUseLegacySql(false)
-                .build()
-
-            val results = bigQuery.query(queryConfig)
+            val results = queryService.runQuery(query)
             val websites = mutableListOf<Website>()
 
             results.iterateAll().forEach { row ->
@@ -89,7 +64,7 @@ class BigQuerySchemaService(
     }
 
     /**
-     * Gets the schema for a specific table
+     * Gets the schema for a specific table (metadata API, no data scanning).
      */
     fun getTableSchema(tableName: String): TableSchema {
         val tableId = com.google.cloud.bigquery.TableId.of(projectId, dataset, tableName)
@@ -112,7 +87,7 @@ class BigQuerySchemaService(
     }
 
     /**
-     * Lists all tables in the dataset
+     * Lists all tables in the dataset.
      */
     fun listTables(): List<String> {
         val datasetId = com.google.cloud.bigquery.DatasetId.of(projectId, dataset)
@@ -123,19 +98,19 @@ class BigQuerySchemaService(
     }
 
     /**
-     * Generates a comprehensive schema context for LLM prompts
+     * Generates a comprehensive schema context for LLM prompts.
      */
     fun getSchemaContext(): String {
         val websites = getWebsites()
         val tables = listTables()
 
         val schemaBuilder = StringBuilder()
-        
+
         schemaBuilder.appendLine("=== BIGQUERY DATABASE SCHEMA ===")
         schemaBuilder.appendLine("Project: $projectId")
         schemaBuilder.appendLine("Dataset: $dataset")
         schemaBuilder.appendLine()
-        
+
         schemaBuilder.appendLine("=== AVAILABLE WEBSITES ===")
         if (websites.isEmpty()) {
             schemaBuilder.appendLine("No websites found")
@@ -172,7 +147,7 @@ class BigQuerySchemaService(
     }
 
     /**
-     * Health check - verifies BigQuery connection
+     * Health check - verifies BigQuery connection.
      */
     fun isHealthy(): Boolean {
         return try {
