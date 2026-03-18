@@ -2,6 +2,7 @@ package no.jamph.llmValidation
 
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock.*
+import com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration
 import kotlinx.coroutines.runBlocking
 import no.jamph.ragumami.core.llm.OllamaClient
@@ -11,8 +12,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 
-// To run this test, insert into terminal: 
-" mvn test -Dmaven.test.skip=false -Dtest=ShortPromptTimerTest "
+// To run this test, insert into terminal:
+// mvn test -Dmaven.test.skip=false -Dtest=ShortPromptTimerTest
 
 class ShortPromptTimerTest {
     private lateinit var wireMock: WireMockServer

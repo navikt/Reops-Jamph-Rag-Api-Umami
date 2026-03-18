@@ -12,8 +12,8 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 
-// To run this test, insert into terminal: 
-" mvn test -Dmaven.test.skip=false -Dtest=LongPromptTimerTest "
+// To run this test, insert into terminal:
+// mvn test -Dmaven.test.skip=false -Dtest=LongPromptTimerTest
 
 class LongPromptTimerTest {
     private lateinit var wireMock: WireMockServer
