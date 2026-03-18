@@ -2,12 +2,7 @@ package no.jamph.llmValidation
 
 import com.google.cloud.bigquery.*
 
-fun estimateCostInMB(sql: String): Double {
-
-    if (!isSqlQueryValid(sql)) return 0.0
-
-    // Initialize the BigQuery client
-    val bigquery: BigQuery = BigQueryOptions.getDefaultInstance().service
+fun estimateCostInMB(sql: String, bigquery: BigQuery = BigQueryOptions.getDefaultInstance().service): Double {
 
     val config = QueryJobConfiguration.newBuilder(sql)
         .setDryRun(true)
