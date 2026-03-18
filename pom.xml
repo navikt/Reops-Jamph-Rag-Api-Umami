@@ -23,12 +23,26 @@
         <kotlin.code.style>official</kotlin.code.style>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
-        <maven.test.skip>true</maven.test.skip>
     </properties>
 
 
 
 
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>net.bytebuddy</groupId>
+                <artifactId>byte-buddy</artifactId>
+                <version>1.15.11</version>
+            </dependency>
+            <dependency>
+                <groupId>net.bytebuddy</groupId>
+                <artifactId>byte-buddy-agent</artifactId>
+                <version>1.15.11</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <dependency>
@@ -157,13 +171,6 @@
             <version>1.25.0</version>
         </dependency>
 
-        <!-- SQL Parsing -->
-        <dependency>
-            <groupId>com.github.jsqlparser</groupId>
-            <artifactId>jsqlparser</artifactId>
-            <version>4.9</version>
-        </dependency>
-
         <!-- Testing -->
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
@@ -171,6 +178,13 @@
             <version>${kotlin.version}</version>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>com.github.jsqlparser</groupId>
+            <artifactId>jsqlparser</artifactId>
+            <version>4.9</version>
+        </dependency>
+        
         <dependency>
             <groupId>io.ktor</groupId>
             <artifactId>ktor-server-test-host-jvm</artifactId>
@@ -179,8 +193,8 @@
         </dependency>
         <dependency>
             <groupId>io.mockk</groupId>
-            <artifactId>mockk</artifactId>
-            <version>1.14.9</version>
+            <artifactId>mockk-jvm</artifactId>
+            <version>1.14.3</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -190,6 +204,7 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+    
 
     <build>
         <sourceDirectory>src/main/kotlin</sourceDirectory>
