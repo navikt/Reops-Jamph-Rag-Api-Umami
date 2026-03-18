@@ -20,6 +20,10 @@ spec:
           namespace: team-researchops
         - application: reops-felgen
           namespace: team-researchops
+    outbound:
+      rules:
+        - application: jamph-ollama
+          namespace: team-researchops
   liveness:
     path: /health
     initialDelay: 20
@@ -43,3 +47,5 @@ spec:
       value: "8004"
     - name: CORS_ALLOWED_ORIGIN
       value: "*.ansatt.dev.nav.no,*.ekstern.dev.nav.no"
+    - name: OLLAMA_BASE_URL
+      value: "http://jamph-ollama"

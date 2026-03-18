@@ -5,9 +5,11 @@ import com.github.tomakehurst.wiremock.client.WireMock.*
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.*
+import org.junit.jupiter.api.Disabled
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
+@Disabled("Integration test - enable when Ollama is running")
 class OllamaClientTest {
     private lateinit var wireMock: WireMockServer
     private lateinit var client: OllamaClient

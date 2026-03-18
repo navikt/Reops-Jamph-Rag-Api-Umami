@@ -3,7 +3,7 @@ package no.jamph.ragumami.umami.domain
 import no.jamph.ragumami.core.rag.RAGOrchestrator
 import no.jamph.ragumami.core.rag.QueryContext
 import no.jamph.ragumami.core.llm.OllamaClient
-import no.jamph.ragumami.core.bigquery.BigQuerySchemaService
+import no.jamph.bigquery.BigQuerySchemaService
 
 class UmamiRAGService(
     private val ollamaClient: OllamaClient,

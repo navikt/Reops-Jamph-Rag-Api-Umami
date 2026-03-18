@@ -5,7 +5,7 @@ import net.sf.jsqlparser.parser.CCJSqlParserManager
 import java.io.StringReader
 
 private val BLOCKED = Regex(
-    "\\b(DELETE|DROP|TRUNCATE|UPDATE|INSERT|ALTER|MERGE|CREATE(?!\\s+(TEMP|TEMPORARY))|LOAD)\\b",
+    "\\b(DELETE|DROP|TRUNCATE|UPDATE|INSERT|ALTER|MERGE|REPLACE|CREATE(?!\\s+(TEMP|TEMPORARY))|LOAD)\\b",
     RegexOption.IGNORE_CASE
 )
 
