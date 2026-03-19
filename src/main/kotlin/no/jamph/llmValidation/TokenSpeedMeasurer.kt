@@ -1,6 +1,7 @@
 package no.jamph.llmValidation
 
 import no.jamph.ragumami.core.llm.OllamaClient
+import com.google.gson.JsonParser
 
 data class TokenSpeedResult(
     val model: String,
@@ -20,9 +21,9 @@ class TokenSpeedMeasurer(
         val rawJson = client.generate(prompt)  // returns raw JSON body
 
         val json = try {
-        com.google.gson.JsonParser.parseString(rawJson).asJsonObject
+            JsonParser.parseString(rawJson).asJsonObject
         } catch (e: Exception) {
-           return TokenSpeedResult(model, 0, 0, 0L, 0.0)
+            return TokenSpeedResult(model, 0, 0, 0L, 0.0)
         }
 
         val promptTokens = json.get("prompt_eval_count")?.asInt ?: 0
