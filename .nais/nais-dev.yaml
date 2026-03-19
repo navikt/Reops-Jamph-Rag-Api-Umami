@@ -35,7 +35,6 @@ spec:
     initialDelay: 5
   ingresses:
     - "https://jamph-rag-api-umami.ekstern.dev.nav.no"
-#    - "https://jamph-rag-api-umami.ansatt.dev.nav.no"
   resources:
     limits:
       cpu: "1"
