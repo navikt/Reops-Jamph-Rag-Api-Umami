@@ -27,7 +27,7 @@ class TokenSpeedMeasurer(
 
         val promptTokens = json.get("prompt_eval_count")?.asInt ?: 0
         val responseTokens = json.get("eval_count")?.asInt ?: 0
-        val evalDurationNs = json.get("eval_duration")?.asLong ?: 1L
+        val evalDurationNs = json.get("eval_duration")?.asLong ?: 0L
         val evalDurationMs = evalDurationNs / 1_000_000
 
         val tokensPerSecond = if (evalDurationNs > 0)
