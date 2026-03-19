@@ -2,7 +2,10 @@
 package no.jamph.llmValidation
 
 import no.jamph.ragumami.umami.domain.UmamiRAGService
+import no.jamph.llmValidation.SHORT_PROMPT_MAX
 import org.slf4j.LoggerFactory
+
+const val SHORT_PROMPT_MAX = 1000
 
 data class ShortPromptTime(
     val query: String,
@@ -16,8 +19,8 @@ class ShortPromptTimer(
     private val logger = LoggerFactory.getLogger(ShortPromptTimer::class.java)
 
     suspend fun measureTime(query: String): ShortPromptTime {
-        require(query.length <= LONG_CONTEXT_THRESHOLD) {
-            "Query length (${query.length}) must be $LONG_CONTEXT_THRESHOLD characters or fewer"
+        require(query.length <= SHORT_PROMPT_MAX) {
+            "Query length (${query.length}) must be $SHORT_PROMPT_MAX characters or fewer"
         }
 
         val startNanos = System.nanoTime()
