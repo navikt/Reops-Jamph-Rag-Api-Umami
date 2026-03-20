@@ -24,6 +24,9 @@ spec:
       rules:
         - application: jamph-ollama
           namespace: team-researchops
+      external:
+        - host: bigquery.googleapis.com
+        - host: www.googleapis.com
   liveness:
     path: /health
     initialDelay: 20
@@ -32,7 +35,6 @@ spec:
     initialDelay: 5
   ingresses:
     - "https://jamph-rag-api-umami.ekstern.dev.nav.no"
-#    - "https://jamph-rag-api-umami.ansatt.dev.nav.no"
   resources:
     limits:
       cpu: "1"

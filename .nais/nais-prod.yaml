@@ -23,6 +23,9 @@ spec:
       rules:
         - application: jamph-ollama
           namespace: team-researchops
+      external:
+        - host: bigquery.googleapis.com
+        - host: www.googleapis.com
   liveness:
     path: /health
     initialDelay: 20
