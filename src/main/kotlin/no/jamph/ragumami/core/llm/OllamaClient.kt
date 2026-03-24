@@ -23,9 +23,9 @@ class OllamaClient(
         }
         
         install(HttpTimeout) {
-            requestTimeoutMillis = 30_000
+            requestTimeoutMillis = 120_000
             connectTimeoutMillis = 10_000
-            socketTimeoutMillis = 30_000
+            socketTimeoutMillis = 120_000
         }
         
         install(HttpRequestRetry) {
@@ -62,11 +62,13 @@ class OllamaClient(
             
             val duration = System.currentTimeMillis() - startTime
             logger.info("OLLAMA_SUCCESS: Generate completed in {}ms", duration)
-            
-            response.bodyAsText()
+
+            val body = response.bodyAsText()
+            val json = com.google.gson.Gson().fromJson(body, Map::class.java)
+            json["response"] as? String ?: body
             
         } catch (e: HttpRequestTimeoutException) {
-            logger.error("OLLAMA_TIMEOUT: Request timed out after 30s for model: {}", model, e)
+            logger.error("OLLAMA_TIMEOUT: Request timed out after 120s for model: {}", model, e)
             return "Integrasjon til api rag virker, men ollama virker ikke (timeout)"
         } catch (e: Exception) {
             logger.error("OLLAMA_ERROR: Failed to generate response", e)

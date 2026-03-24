@@ -33,8 +33,14 @@ class UmamiRAGService(
         }
         
         val prompt = buildSQLPrompt(naturalLanguageQuery, schemaContext)
-        
-        return ollamaClient.generate(prompt)
+        val raw = ollamaClient.generate(prompt)
+        return extractSql(raw)
+    }
+
+    private fun extractSql(response: String): String {
+        val codeBlock = Regex("```(?:sql)?\\s*([\\s\\S]*?)```", RegexOption.IGNORE_CASE)
+            .find(response)?.groupValues?.get(1)?.trim()
+        return codeBlock ?: response.trim()
     }
     
     private fun getFallbackSchemaContext(): String {
