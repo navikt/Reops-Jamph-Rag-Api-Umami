@@ -110,3 +110,21 @@ Spørsmål knyttet til koden eller repositoryet kan stilles til teamalias@nav.no
 ### For Nav-ansatte
 
 Interne henvendelser kan sendes via Slack i kanalen #teamkanal.(teamreasarchobs)
+
+
+Modeller:
+
+    # echo "Pulling qwen2.5-coder:7b..." && \
+    # timeout 900 ollama pull qwen2.5-coder:7b && \
+    # echo "Pulling DeepSeek-R1-Distill-Qwen-7B..." && \
+    # timeout 900 ollama pull deepseek-r1:7b && \
+    # echo "Pulling Mistral 7B..." && \
+    # timeout 900 ollama pull 7Bmistral:7b && \
+    # echo "Pulling Qwen2.5-Coder-7B..." && \
+    # timeout 900 ollama pull qwen2.5-coder:7b && \
+    # echo "Qwen3.5 7B..." && \
+    # timeout 900 ollama pull qwen3.5:9b && \
+    # echo "Phi-4-mini..." && \
+    # timeout 900 ollama pull phi4-mini && \
+    echo "DeepSeek-Coder-V2-Lite..." && \
+    timeout 900 ollama pull deepseek-coder-v2:16b && \
