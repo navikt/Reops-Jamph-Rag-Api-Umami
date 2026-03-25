@@ -77,6 +77,23 @@ class OllamaClient(
         }
     }
 
+    suspend fun generateRaw(prompt: String): String {
+        return try {
+            val response = client.post("$baseUrl/api/generate") {
+                contentType(ContentType.Application.Json)
+                setBody(mapOf(
+                    "model" to model,
+                    "prompt" to prompt,
+                    "stream" to false
+                ))
+            }
+            response.bodyAsText()
+        } catch (e: Exception) {
+            logger.error("OLLAMA_ERROR: generateRaw failed", e)
+            "{}"
+        }
+    }
+
     suspend fun embed(text: String): List<Float> {
         return try {
             val startTime = System.currentTimeMillis()

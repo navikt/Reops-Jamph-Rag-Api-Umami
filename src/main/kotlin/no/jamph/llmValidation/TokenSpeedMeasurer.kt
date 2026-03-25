@@ -18,8 +18,7 @@ class TokenSpeedMeasurer(
 
     private val client = OllamaClient(ollamaBaseUrl.trimEnd('/'), model)
     suspend fun measure(prompt: String): TokenSpeedResult {
-        val rawJson = client.generate(prompt)  // returns raw JSON body
-
+        val rawJson = client.generateRaw(prompt)  // returns full JSON body with token stats
         val json = try {
             JsonParser.parseString(rawJson).asJsonObject
         } catch (e: Exception) {
