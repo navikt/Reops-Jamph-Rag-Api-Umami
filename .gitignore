@@ -10,6 +10,7 @@ logs/
 # Environment files (keep examples, ignore actual configs)
 *.env
 !example.*.env
+*.json
 
 # Python
 __pycache__/
