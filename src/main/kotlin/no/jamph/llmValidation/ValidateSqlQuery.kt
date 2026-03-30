@@ -9,6 +9,8 @@ private val BLOCKED = Regex(
     RegexOption.IGNORE_CASE
 )
 
+
+
 // Function that validates SQL 
 fun isSqlQueryValid(sql: String): Boolean {
     
@@ -22,4 +24,10 @@ fun isSqlQueryValid(sql: String): Boolean {
     } catch (e: JSQLParserException) {
         false
     }
+}
+
+fun extractSqlFromResponse(response: String): String {
+    val codeBlock = Regex("```(?:sql)?\\s*([\\s\\S]*?)```", RegexOption.IGNORE_CASE)
+        .find(response)?.groupValues?.get(1)?.trim()
+    return codeBlock ?: response.trim()
 }
