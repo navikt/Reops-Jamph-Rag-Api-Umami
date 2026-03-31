@@ -2,6 +2,7 @@ package no.jamph.llmValidation
 
 import no.jamph.bigquery.BigQuerySchemaServiceMock
 import no.jamph.ragumami.core.llm.OllamaClient
+import no.jamph.ragumami.Routes
 import kotlinx.coroutines.runBlocking
 
 private const val AKSEL_ID = "fb69e1e9-1bd3-4fd9-b700-9d035cbf44e1"
@@ -18,7 +19,7 @@ fun LlmSqlLogic(
     modelName: String,
     generateFn: suspend (String) -> String = { prompt ->
         OllamaClient(
-            baseUrl = System.getenv("OLLAMA_BASE_URL") ?: "http://localhost:11434",
+            baseUrl = System.getenv("OLLAMA_BASE_URL") ?: Routes.ollamaUrl,
             model = modelName
         ).generate(prompt)
     }
