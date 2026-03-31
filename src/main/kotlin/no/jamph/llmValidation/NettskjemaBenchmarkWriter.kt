@@ -8,34 +8,40 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.gson.*
 import kotlinx.coroutines.runBlocking
+import io.ktor.client.plugins.cookies.*
 
 private data class NettskjemaAnswer(
     val questionId: Long,
-    val answers: List<Map<String, String>>
+    val answers: List<Map<String, String>>,
+    val type: String = "TEXT"
 )
 
 private data class NettskjemaSubmission(
+    val metadata: Map<String, Any> = emptyMap(),
     val answers: List<NettskjemaAnswer>
 )
 
 class NettskjemaBenchmarkWriter(
     private val formId: Long = 614069L,
-    private val qModel:           Long = 9106646,
-    private val qTimestamp:       Long = 9106647,
-    private val qSqlAccuracy:     Long = 9106648,
-    private val qDialectAccuracy: Long = 9106649,
-    private val qTokensPerSec:    Long = 9106650,
-    private val qPromptTokens:    Long = 9106651,
-    private val qResponseTokens:  Long = 9106652,
-    private val qEvalDurationMs:  Long = 9106653
+    private val qModel:           Long = 10239299,
+    private val qTimestamp:       Long = 10239300,
+    private val qSqlAccuracy:     Long = 10239301,
+    private val qDialectAccuracy: Long = 10239302,
+    private val qTokensPerSec:    Long = 10239303,
+    private val qPromptTokens:    Long = 10239304,
+    private val qResponseTokens:  Long = 10239305,
+    private val qEvalDurationMs:  Long = 10239306
 ) {
     private val client = HttpClient(CIO) {
         install(ContentNegotiation) { gson() }
+        install(HttpCookies)   // ← stores session cookie from CSRF GET and resends it with POST
     }
 
     fun appendRows(results: List<ModelBenchmarkResult>) = runBlocking {
+
         results.forEach { r ->
             val submission = NettskjemaSubmission(
+                metadata = mapOf("formId" to formId),
                 answers = listOf(
                     NettskjemaAnswer(qModel,           listOf(mapOf("text" to r.model))),
                     NettskjemaAnswer(qTimestamp,       listOf(mapOf("text" to r.timestamp))),
@@ -48,6 +54,7 @@ class NettskjemaBenchmarkWriter(
                 )
             )
 
+            // Step 2: include token in the POST header
             val response = client.post("https://nettskjema.no/api/v3/form/$formId/submission") {
                 contentType(ContentType.Application.Json)
                 setBody(submission)

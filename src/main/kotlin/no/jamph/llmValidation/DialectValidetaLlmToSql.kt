@@ -87,7 +87,8 @@ fun DialectValidetaLlmToSql(
         val allQueries = llmQueriesSidevisninger2025 + llmQueriesMestBesokteUndersider2025
         var validCount = 0
         for (query in allQueries) {
-            val generatedSql = generateFn(buildPrompt(query))
+            val raw = generateFn(buildPrompt(query))
+            val generatedSql = extractSqlFromResponse(raw)
             if (isSqlQueryValid(generatedSql)) validCount++
         }
 

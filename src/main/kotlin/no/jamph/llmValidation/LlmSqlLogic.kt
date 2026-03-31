@@ -114,7 +114,8 @@ fun LlmSqlLogic(
     )
 
     val correctCount = testCases.count { testCase ->
-        val generatedSql = generateFn(buildLlmSqlPrompt(testCase.question, schema))
+        val raw = generateFn(buildLlmSqlPrompt(testCase.question, schema))
+        val generatedSql = extractSqlFromResponse(raw)
         isCorrect(generatedSql, testCase.rules)
     }
 

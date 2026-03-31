@@ -61,6 +61,7 @@ fun Application.configureCORS() {
         allowHeader(HttpHeaders.ContentType)
         allowHost("localhost:3000")
         allowHost("localhost:5173")
+        allowHost("localhost:5174")
         allowCredentials = true
     }
 }
