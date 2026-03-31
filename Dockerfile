@@ -13,7 +13,7 @@ COPY src ./src
 RUN mvn clean package -Dmaven.test.skip=true -B
 
 # Extract ollamaUrl from routes.json into a .env file for the runtime stage
-RUN OLLAMA_URL=$(grep -oP '(?<="ollamaUrl":\s*")[^"]+' src/main/resources/routes.json) && \
+RUN OLLAMA_URL=$(sed -n 's/.*"ollamaUrl": *"\([^"]*\)".*/\1/p' src/main/resources/routes.json) && \
     echo "OLLAMA_BASE_URL=${OLLAMA_URL}" > /tmp/routes.env
 
 # Stage 2: Runtime
