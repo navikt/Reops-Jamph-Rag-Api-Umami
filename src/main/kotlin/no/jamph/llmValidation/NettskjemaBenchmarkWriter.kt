@@ -23,6 +23,7 @@ private data class NettskjemaSubmission(
 
 class NettskjemaBenchmarkWriter(
     private val formId: Long = 614069L,
+    private val baseUrl: String = "https://nettskjema.no",
     private val qModel:           Long = 10239299,
     private val qTimestamp:       Long = 10239300,
     private val qSqlAccuracy:     Long = 10239301,
@@ -55,7 +56,7 @@ class NettskjemaBenchmarkWriter(
             )
 
             // Step 2: include token in the POST header
-            val response = client.post("https://nettskjema.no/api/v3/form/$formId/submission") {
+            val response = client.post("$baseUrl/api/v3/form/$formId/submission") {
                 contentType(ContentType.Application.Json)
                 setBody(submission)
             }
