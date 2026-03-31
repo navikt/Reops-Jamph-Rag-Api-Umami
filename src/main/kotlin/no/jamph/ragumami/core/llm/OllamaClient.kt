@@ -16,6 +16,27 @@ class OllamaClient(
     private val baseUrl: String,
     private val model: String
 ) {
+    companion object {
+        private val log = LoggerFactory.getLogger(OllamaClient::class.java)
+
+        suspend fun fetchDefaultModel(baseUrl: String): String {
+            val client = HttpClient(CIO)
+            return try {
+                val response = client.get("$baseUrl/api/tags")
+                val body = response.bodyAsText()
+                val json = JsonParser.parseString(body).asJsonObject
+                json.getAsJsonArray("models")
+                    ?.firstOrNull()
+                    ?.asJsonObject
+                    ?.get("name")
+                    ?.asString
+                    ?: throw IllegalStateException("No models found in Ollama at $baseUrl. Install a model with: ollama pull <model>")
+            } finally {
+                client.close()
+            }
+        }
+    }
+
     private val logger = LoggerFactory.getLogger(OllamaClient::class.java)
     
     private val client = HttpClient(CIO) {
