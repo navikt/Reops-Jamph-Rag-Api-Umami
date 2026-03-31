@@ -63,13 +63,15 @@ fun Application.configureCORS() {
         allowHost("localhost:3000")
         allowHost("localhost:5173")
         allowHost("localhost:5174")
+        allowHost(Routes.frontendHost, schemes = listOf("https"))
+        allowHost(Routes.ragApiHost, schemes = listOf("https"))
         allowCredentials = true
     }
 }
 
 fun Application.configureRouting() {
     val ollamaBaseUrl = environment.config.propertyOrNull("ollama.baseUrl")?.getString()
-        ?: System.getenv("OLLAMA_BASE_URL") ?: "http://localhost:11434"
+        ?: System.getenv("OLLAMA_BASE_URL") ?: Routes.ollamaUrl
     val ollamaModel = environment.config.propertyOrNull("ollama.model")?.getString()
         ?: System.getenv("OLLAMA_MODEL") ?: runBlocking { OllamaClient.fetchDefaultModel(ollamaBaseUrl) }
     

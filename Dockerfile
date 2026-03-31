@@ -12,6 +12,10 @@ RUN mvn dependency:go-offline -B
 COPY src ./src
 RUN mvn clean package -Dmaven.test.skip=true -B
 
+# Extract ollamaUrl from routes.json into a .env file for the runtime stage
+RUN OLLAMA_URL=$(grep -oP '(?<="ollamaUrl":\s*")[^"]+' src/main/resources/routes.json) && \
+    echo "OLLAMA_BASE_URL=${OLLAMA_URL}" > /tmp/routes.env
+
 # Stage 2: Runtime
 FROM eclipse-temurin:21-jre-jammy
 
@@ -25,17 +29,19 @@ RUN apt-get update && \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy the fat JAR from builder stage
+# Copy the fat JAR and routes defaults from builder stage
 COPY --from=builder /build/target/api-1.0-SNAPSHOT-jar-with-dependencies.jar ./app.jar
+COPY --from=builder /tmp/routes.env ./routes.env
+COPY entrypoint.sh ./entrypoint.sh
+RUN chmod +x ./entrypoint.sh
 
 # Expose API port
 EXPOSE 8004
 
-# Environment variables with defaults
+# Environment variables with defaults (OLLAMA_BASE_URL is sourced from routes.env at runtime)
 ENV API_PORT=8004 \
     API_HOST=0.0.0.0 \
-    OLLAMA_BASE_URL=http://localhost:11434 \
     OLLAMA_MODEL=llama3.2:3b
 
 # Run the application
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["/app/entrypoint.sh"]

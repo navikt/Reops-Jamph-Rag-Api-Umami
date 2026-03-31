@@ -2,6 +2,7 @@ package no.jamph.llmValidation
 
 import kotlinx.coroutines.runBlocking
 import java.time.Instant
+import no.jamph.ragumami.Routes
 
 data class ModelBenchmarkResult(
     val model: String,
@@ -18,7 +19,7 @@ private const val SPEED_PROBE = "Write a BigQuery SQL query that counts rows in 
 
 fun runBenchmark(
     models: List<String>,
-    ollamaBaseUrl: String = System.getenv("OLLAMA_BASE_URL") ?: "http://localhost:11434"
+    ollamaBaseUrl: String = System.getenv("OLLAMA_BASE_URL") ?: Routes.ollamaUrl
 ): List<ModelBenchmarkResult> = models.map { model ->
     println("▶ Benchmarking: $model")
 

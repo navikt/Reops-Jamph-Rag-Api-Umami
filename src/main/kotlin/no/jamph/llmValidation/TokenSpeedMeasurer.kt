@@ -1,6 +1,7 @@
 package no.jamph.llmValidation
 
 import no.jamph.ragumami.core.llm.OllamaClient
+import no.jamph.ragumami.Routes
 import com.google.gson.JsonParser
 
 data class TokenSpeedResult(
@@ -12,7 +13,7 @@ data class TokenSpeedResult(
 )
 
 class TokenSpeedMeasurer(
-    private val ollamaBaseUrl: String = System.getenv("OLLAMA_BASE_URL") ?: "https://jamph-ollama.ekstern.dev.nav.no/",
+    private val ollamaBaseUrl: String = System.getenv("OLLAMA_BASE_URL") ?: Routes.ollamaUrl,
     private val model: String
 ) {
 

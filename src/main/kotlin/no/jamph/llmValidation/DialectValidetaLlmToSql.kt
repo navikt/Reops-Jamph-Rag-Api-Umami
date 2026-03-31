@@ -2,13 +2,14 @@ package no.jamph.llmValidation
 
 import no.jamph.bigquery.BigQuerySchemaServiceMock
 import no.jamph.ragumami.core.llm.OllamaClient
+import no.jamph.ragumami.Routes
 import kotlinx.coroutines.runBlocking
 
 // Function to validate LLM-to-SQL across dialect variations
 fun DialectValidetaLlmToSql(
     modellName: String,
     generateFn: suspend (String) -> String = { prompt ->
-        OllamaClient(baseUrl = System.getenv("OLLAMA_BASE_URL") ?: "http://localhost:11434", model = modellName).generate(prompt)
+        OllamaClient(baseUrl = System.getenv("OLLAMA_BASE_URL") ?: Routes.ollamaUrl, model = modellName).generate(prompt)
     }
 ): Double {
     return runBlocking {
