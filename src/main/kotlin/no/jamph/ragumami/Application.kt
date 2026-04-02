@@ -268,7 +268,7 @@ fun Application.configureRouting() {
                 } else {
                     ragService
                 }
-                val sql = serviceToUse.generateSQL(request.query)
+                val sql = serviceToUse.generateSQL(request.query, request.url)
                 call.respond(SQLResponse(sql))
             } catch (e: Exception) {
                 call.respond(
@@ -440,7 +440,7 @@ fun Application.configureRouting() {
 
 data class ChatRequest(val message: String, val model: String? = null)
 data class ChatResponse(val response: String)
-data class SQLRequest(val query: String, val model: String? = null)
+data class SQLRequest(val query: String, val model: String? = null, val url: String? = null)
 data class SQLResponse(val sql: String)
 data class BenchmarkRequest(val model: String? = null, val ollamaBaseUrl: String? = null)
 data class ErrorResponse(val error: String)
