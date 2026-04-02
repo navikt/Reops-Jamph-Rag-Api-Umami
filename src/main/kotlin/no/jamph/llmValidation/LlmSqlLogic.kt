@@ -178,20 +178,16 @@ private fun buildLlmSqlPrompt(question: String, siteId: String, urlPath: String,
     2. ALWAYS use fully qualified table names: `fagtorsdag-prod-81a6.umami_student.event` or `fagtorsdag-prod-81a6.umami_student.session`
     3. NEVER use short table names - ALWAYS include `fagtorsdag-prod-81a6.umami_student.`
     4. Use backticks (`) around table names
-    5. ALWAYS filter by WHERE website_id = '$siteId' - DO NOT JOIN to public_website table
-    6. NEVER use YEAR(), MONTH(), DAY() functions - use EXTRACT() instead: EXTRACT(YEAR FROM created_at)
-    7. If the question mentions a year (e.g., "2025"), ALWAYS add: AND EXTRACT(YEAR FROM created_at) = 2025
+    5. ALWAYS add WHERE website_id = '$siteId' - this is already resolved.
+    6. NEVER JOIN to public_website table - you already have the website_id
+    7. NEVER use YEAR(), MONTH(), DAY() functions - use EXTRACT() instead: EXTRACT(YEAR FROM created_at)
+    8. If the question mentions a year (e.g., "2025"), ALWAYS add: AND EXTRACT(YEAR FROM created_at) = 2025
     8. If the question mentions a month (e.g., "november"), ALWAYS add: AND EXTRACT(MONTH FROM created_at) = 11
     9. For "sidevisninger" (page views), ALWAYS add: AND event_type = 1
-    10. The website_id '$siteId' is already resolved - DO NOT look it up by domain
-    11. If filtering by page, use WHERE url_path = '$urlPath' or url_path LIKE '$urlPath%'
-
-    Example correct format:
-    SELECT COUNT(*) 
-    FROM `fagtorsdag-prod-81a6.umami_student.event` 
-    WHERE website_id = '$siteId' 
-      AND event_type = 1 
-      AND EXTRACT(YEAR FROM created_at) = 2025
+    10. If filtering by page, use: AND url_path LIKE '$urlPath'
+    11. "Daglige" (daily) means: SELECT DATE(created_at) AS dag, COUNT(*) ... GROUP BY dag
+    12. "Trafikkilder" (traffic sources) = referrer_domain column (where visitors come from)
+    13. Always SELECT the columns needed to answer the question, not just COUNT(*)
 
     $schemaContext
 
