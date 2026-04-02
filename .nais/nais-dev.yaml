@@ -11,6 +11,9 @@ spec:
   ttl: 3h
   envFrom:
     - secret: student-bigquery
+  filesFrom:
+    - secret: student-bigquery
+      mountPath: /var/run/secrets/bigquery
   accessPolicy:
     inbound:
       rules:

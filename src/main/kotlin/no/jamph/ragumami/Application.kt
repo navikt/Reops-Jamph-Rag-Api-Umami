@@ -92,20 +92,29 @@ fun Application.configureRouting() {
     val ollamaClient = OllamaClient(ollamaBaseUrl, ollamaModel)
     
     // Initialize BigQuery services if credentials are available
-    // Priority: 1) bigquery-credentials JSON from NAIS secret
-    //           2) GOOGLE_APPLICATION_CREDENTIALS file path
-    //           3) application.conf settings
+    // Priority: 1) bigquery-credentials JSON from NAIS secret (env var)
+    //           2) bigquery-credentials JSON from NAIS filesFrom (mounted file)
+    //           3) GOOGLE_APPLICATION_CREDENTIALS file path
     val bigQueryService = try {
         // NAIS mounts secret keys as env vars - try hyphen and underscore variants
-        val envChecks = mapOf(
+        val envChecks = mutableMapOf(
             "bigquery-credentials" to !System.getenv("bigquery-credentials").isNullOrBlank(),
             "bigquery_credentials" to !System.getenv("bigquery_credentials").isNullOrBlank(),
             "BIGQUERY_CREDENTIALS" to !System.getenv("BIGQUERY_CREDENTIALS").isNullOrBlank(),
             "GOOGLE_APPLICATION_CREDENTIALS" to !System.getenv("GOOGLE_APPLICATION_CREDENTIALS").isNullOrBlank()
         )
-        val credentialsJson = System.getenv("bigquery-credentials")
+        var credentialsJson = System.getenv("bigquery-credentials")
             ?: System.getenv("bigquery_credentials")
             ?: System.getenv("BIGQUERY_CREDENTIALS")
+        
+        // Fallback: try reading from filesFrom mount
+        val secretFile = java.io.File("/var/run/secrets/bigquery/bigquery-credentials")
+        val secretFileExists = secretFile.exists()
+        envChecks["file:/var/run/secrets/bigquery/bigquery-credentials"] = secretFileExists
+        if (credentialsJson.isNullOrBlank() && secretFileExists) {
+            credentialsJson = secretFile.readText()
+        }
+        
         val credentialsPath = environment.config.propertyOrNull("bigquery.credentialsPath")?.getString()
             ?: System.getenv("GOOGLE_APPLICATION_CREDENTIALS")
         
@@ -315,7 +324,8 @@ fun Application.configureRouting() {
                             emitEvent("debug", "BigQuery: initialized but health check failed")
                         } else {
                             emitEvent("debug", "BigQuery: not configured (using mock schema for benchmark)")
-                            emitEvent("debug", "  Checked env vars: bigquery-credentials=${!System.getenv("bigquery-credentials").isNullOrBlank()}, bigquery_credentials=${!System.getenv("bigquery_credentials").isNullOrBlank()}, BIGQUERY_CREDENTIALS=${!System.getenv("BIGQUERY_CREDENTIALS").isNullOrBlank()}, GOOGLE_APPLICATION_CREDENTIALS=${!System.getenv("GOOGLE_APPLICATION_CREDENTIALS").isNullOrBlank()}")
+                            val secretFileExists = java.io.File("/var/run/secrets/bigquery/bigquery-credentials").exists()
+                            emitEvent("debug", "  Checked: bigquery-credentials(env)=${!System.getenv("bigquery-credentials").isNullOrBlank()}, file=/var/run/secrets/bigquery/bigquery-credentials exists=$secretFileExists")
                         }
                         
                         // Step 2: Test Ollama connection
