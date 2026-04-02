@@ -92,20 +92,40 @@ fun Application.configureRouting() {
     val ollamaClient = OllamaClient(ollamaBaseUrl, ollamaModel)
     
     // Initialize BigQuery services if credentials are available
+    // Priority: 1) bigquery-credentials JSON from NAIS secret
+    //           2) GOOGLE_APPLICATION_CREDENTIALS file path
+    //           3) application.conf settings
     val bigQueryService = try {
-        val projectId = environment.config.propertyOrNull("bigquery.projectId")?.getString()
-            ?: System.getenv("BIGQUERY_PROJECT_ID")
-        val dataset = environment.config.propertyOrNull("bigquery.dataset")?.getString()
-            ?: System.getenv("BIGQUERY_DATASET")
-        val location = environment.config.propertyOrNull("bigquery.location")?.getString()
-            ?: System.getenv("BIGQUERY_LOCATION") ?: "europe-north1"
+        val credentialsJson = System.getenv("bigquery-credentials")
         val credentialsPath = environment.config.propertyOrNull("bigquery.credentialsPath")?.getString()
             ?: System.getenv("GOOGLE_APPLICATION_CREDENTIALS")
         
-        if (projectId != null && dataset != null) {
-            val queryService = BigQueryQueryService(projectId, dataset, location, credentialsPath)
+        // Extract projectId from credentials JSON if not set explicitly
+        val projectId = environment.config.propertyOrNull("bigquery.projectId")?.getString()
+            ?: System.getenv("BIGQUERY_PROJECT_ID")
+            ?: credentialsJson?.let {
+                try {
+                    JsonParser.parseString(it).asJsonObject.get("project_id")?.asString
+                } catch (_: Exception) { null }
+            }
+        val dataset = environment.config.propertyOrNull("bigquery.dataset")?.getString()
+            ?: System.getenv("BIGQUERY_DATASET")
+            ?: "analytics_315058498"  // default Umami dataset
+        val location = environment.config.propertyOrNull("bigquery.location")?.getString()
+            ?: System.getenv("BIGQUERY_LOCATION") ?: "europe-north1"
+        
+        if (projectId != null) {
+            if (!credentialsJson.isNullOrBlank()) {
+                log.info("Using BigQuery credentials from bigquery-credentials secret (NAIS)")
+            } else if (!credentialsPath.isNullOrBlank()) {
+                log.info("Using BigQuery credentials from file: $credentialsPath")
+            } else {
+                log.info("Using default BigQuery credentials (ADC)")
+            }
+            val queryService = BigQueryQueryService(projectId, dataset, location, credentialsPath, credentialsJson)
             BigQuerySchemaService(queryService)
         } else {
+            log.warn("BigQuery not configured: no projectId found")
             null
         }
     } catch (e: Exception) {

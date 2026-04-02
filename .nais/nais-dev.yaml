@@ -9,6 +9,8 @@ spec:
   image: "{{ image }}"
   port: 8004
   ttl: 3h
+  envFrom:
+    - secret: student-bigquery
   accessPolicy:
     inbound:
       rules:

@@ -8,6 +8,8 @@ metadata:
 spec:
   image: "{{ image }}"
   port: 8004
+  envFrom:
+    - secret: student-bigquery
   accessPolicy:
     inbound:
       rules:

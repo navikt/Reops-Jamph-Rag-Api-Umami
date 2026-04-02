@@ -6,6 +6,7 @@ import com.google.cloud.bigquery.BigQueryOptions
 import com.google.cloud.bigquery.FieldValue
 import com.google.cloud.bigquery.QueryJobConfiguration
 import com.google.cloud.bigquery.TableResult
+import java.io.ByteArrayInputStream
 import java.io.FileInputStream
 
 class BigQueryQueryService(
@@ -13,6 +14,7 @@ class BigQueryQueryService(
     val dataset: String,
     private val location: String = "europe-north1",
     credentialsPath: String? = null,
+    credentialsJson: String? = null,
 ) {
     internal val bigQuery: BigQuery
 
@@ -21,7 +23,16 @@ class BigQueryQueryService(
             .setProjectId(projectId)
             .setLocation(location)
 
-        if (!credentialsPath.isNullOrBlank()) {
+        if (!credentialsJson.isNullOrBlank()) {
+            try {
+                val credentials = GoogleCredentials.fromStream(
+                    ByteArrayInputStream(credentialsJson.toByteArray())
+                )
+                builder.setCredentials(credentials)
+            } catch (e: Exception) {
+                throw IllegalStateException("Failed to parse BigQuery credentials JSON", e)
+            }
+        } else if (!credentialsPath.isNullOrBlank()) {
             try {
                 val credentials = GoogleCredentials.fromStream(FileInputStream(credentialsPath))
                 builder.setCredentials(credentials)
