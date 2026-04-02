@@ -20,7 +20,7 @@ class UmamiRAGService(
         return ollamaClient.generate(prompt)
     }
     
-    suspend fun generateSQL(naturalLanguageQuery: String): String {
+    suspend fun generateSQL(naturalLanguageQuery: String, url: String? = null): String {
         // Get schema context from BigQuery if available, otherwise use fallback
         val schemaContext = if (bigQueryService != null) {
             try {
@@ -32,7 +32,7 @@ class UmamiRAGService(
             getFallbackSchemaContext()
         }
         
-        val prompt = buildSQLPrompt(naturalLanguageQuery, schemaContext)
+        val prompt = buildSQLPrompt(naturalLanguageQuery, schemaContext, url)
         val raw = ollamaClient.generate(prompt)
         return extractSql(raw)
     }
@@ -74,7 +74,12 @@ class UmamiRAGService(
         """.trimIndent()
     }
     
-    private fun buildSQLPrompt(query: String, schema: String): String {
+    private fun buildSQLPrompt(query: String, schema: String, url: String? = null): String {
+        val websiteContext = if (url != null) {
+            "- The user is viewing the website: $url — use this domain to find the matching website_id from the Available Websites list"
+        } else {
+            "- When user mentions a website (like \"Aksel\"), find the matching website_id from the Available Websites list"
+        }
         return """
         You are a BigQuery SQL expert for Umami Analytics.
         
@@ -82,7 +87,7 @@ class UmamiRAGService(
         - Generate ONLY valid BigQuery SQL, no explanations or markdown
         - Use backticks (`) for table names
         - Always use fully qualified table names as shown in schema
-        - When user mentions a website (like "Aksel"), find the matching website_id from the Available Websites list
+        - ${'$'}websiteContext
         - Add WHERE website_id = '<matched-id>' when querying event or event_data tables
         - Return only the SQL query, nothing else
         
