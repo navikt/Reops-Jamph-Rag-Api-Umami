@@ -9,6 +9,7 @@ private const val AKSEL_ID = "fb69e1e9-1bd3-4fd9-b700-9d035cbf44e1"
 
 private data class TestCase(
     val question: String,
+    val url: String,
     val rules: List<(String) -> Boolean>
 )
 
@@ -30,6 +31,7 @@ fun LlmSqlLogic(
     val testCases = listOf(
         TestCase(
             question = "Daglige sidevisninger i 2025",
+            url = "aksel.nav.no",
             rules = listOf(
                 { sql -> sql.contains(AKSEL_ID) },
                 { sql -> sql.contains("2025") },
@@ -40,6 +42,7 @@ fun LlmSqlLogic(
         ),
         TestCase(
             question = "Topp 12 mest besøkte undersider i 2025",
+            url = "aksel.nav.no",
             rules = listOf(
                 { sql -> sql.contains(AKSEL_ID) },
                 { sql -> sql.contains("2025") },
@@ -51,6 +54,7 @@ fun LlmSqlLogic(
         ),
         TestCase(
             question = "Sidevisninger per måned i 2025",
+            url = "aksel.nav.no",
             rules = listOf(
                 { sql -> sql.contains(AKSEL_ID) },
                 { sql -> sql.contains("2025") },
@@ -60,6 +64,7 @@ fun LlmSqlLogic(
         ),
         TestCase(
             question = "Trafikkilder i november 2025",
+            url = "aksel.nav.no",
             rules = listOf(
                 { sql -> sql.contains(AKSEL_ID) },
                 { sql -> sql.contains("2025") },
@@ -70,6 +75,7 @@ fun LlmSqlLogic(
         ),
         TestCase(
             question = "Eksterne nettsider besøkende kommer fra",
+            url = "aksel.nav.no",
             rules = listOf(
                 { sql -> sql.contains(AKSEL_ID) },
                 { sql -> sql.lowercase().contains("referrer_domain") },
@@ -78,6 +84,7 @@ fun LlmSqlLogic(
         ),
         TestCase(
             question = "Lineær regresjon: trend i daglige sidevisninger",
+            url = "aksel.nav.no",
             rules = listOf(
                 { sql -> sql.contains(AKSEL_ID) },
                 { sql -> sql.contains("2025") },
@@ -87,6 +94,7 @@ fun LlmSqlLogic(
         ),
         TestCase(
             question = "Nøkkeltall: handlinger, navigering og frafall",
+            url = "aksel.nav.no",
             rules = listOf(
                 { sql -> sql.contains(AKSEL_ID) },
                 { sql -> sql.contains("2025") },
@@ -96,6 +104,7 @@ fun LlmSqlLogic(
         ),
         TestCase(
             question = "Hvilket operativsystem bruker brukerne?",
+            url = "aksel.nav.no",
             rules = listOf(
                 { sql -> sql.contains(AKSEL_ID) },
                 { sql -> sql.contains("2025") },
@@ -105,6 +114,7 @@ fun LlmSqlLogic(
         ),
         TestCase(
             question = "Hvor navigerer brukere etter å ha søkt på siden?",
+            url = "aksel.nav.no",
             rules = listOf(
                 { sql -> sql.contains(AKSEL_ID) },
                 { sql -> sql.contains("2025") },
@@ -118,7 +128,7 @@ fun LlmSqlLogic(
     var correctCount = 0
     testCases.forEachIndexed { index, testCase ->
         debugLog("  SQL test ${index + 1}/${testCases.size}: ${testCase.question}")
-        val raw = generateFn(buildLlmSqlPrompt(testCase.question, schema))
+        val raw = generateFn(buildLlmSqlPrompt(testCase.question, testCase.url, schema))
         val generatedSql = extractSqlFromResponse(raw)
         debugLog("  Generated SQL: ${generatedSql.replace("\n", " ")}")
         val passed = isCorrect(generatedSql, testCase.rules)
@@ -129,14 +139,14 @@ fun LlmSqlLogic(
     correctCount.toDouble() / testCases.size
 }
 
-private fun buildLlmSqlPrompt(question: String, schemaContext: String): String = """
+private fun buildLlmSqlPrompt(question: String, url: String, schemaContext: String): String = """
     You are a BigQuery SQL expert for Umami Analytics.
 
     IMPORTANT INSTRUCTIONS:
     - Generate ONLY valid BigQuery SQL, no explanations or markdown
     - Use backticks (`) for table names
     - Always use fully qualified table names as shown in schema
-    - When user mentions a website (like "Aksel"), find the matching website_id from the Available Websites list
+    - The user is viewing the website: ${'$'}url — use this domain to find the matching website_id from the Available Websites list
     - Add WHERE website_id = '<matched-id>' when querying event or event_data tables
     - Return only the SQL query, nothing else
 
