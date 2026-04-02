@@ -176,14 +176,22 @@ private fun buildLlmSqlPrompt(question: String, siteId: String, urlPath: String,
     CRITICAL REQUIREMENTS:
     1. Output ONLY raw SQL - NO explanations, NO markdown, NO code blocks, NO comments
     2. ALWAYS use fully qualified table names: `fagtorsdag-prod-81a6.umami_student.event` or `fagtorsdag-prod-81a6.umami_student.session`
-    3. NEVER use short table names like `event` or `session` - ALWAYS include `fagtorsdag-prod-81a6.umami_student.`
+    3. NEVER use short table names - ALWAYS include `fagtorsdag-prod-81a6.umami_student.`
     4. Use backticks (`) around table names
-    5. ALWAYS add WHERE website_id = '$siteId' when querying event or event_data tables
-    6. The user is viewing website_id: $siteId (url_path: $urlPath)
-    7. If filtering by page, use WHERE url_path = '$urlPath' or url_path LIKE '$urlPath%'
+    5. ALWAYS filter by WHERE website_id = '$siteId' - DO NOT JOIN to public_website table
+    6. NEVER use YEAR(), MONTH(), DAY() functions - use EXTRACT() instead: EXTRACT(YEAR FROM created_at)
+    7. If the question mentions a year (e.g., "2025"), ALWAYS add: AND EXTRACT(YEAR FROM created_at) = 2025
+    8. If the question mentions a month (e.g., "november"), ALWAYS add: AND EXTRACT(MONTH FROM created_at) = 11
+    9. For "sidevisninger" (page views), ALWAYS add: AND event_type = 1
+    10. The website_id '$siteId' is already resolved - DO NOT look it up by domain
+    11. If filtering by page, use WHERE url_path = '$urlPath' or url_path LIKE '$urlPath%'
 
     Example correct format:
-    SELECT COUNT(*) FROM `fagtorsdag-prod-81a6.umami_student.event` WHERE website_id = '$siteId'
+    SELECT COUNT(*) 
+    FROM `fagtorsdag-prod-81a6.umami_student.event` 
+    WHERE website_id = '$siteId' 
+      AND event_type = 1 
+      AND EXTRACT(YEAR FROM created_at) = 2025
 
     $schemaContext
 
