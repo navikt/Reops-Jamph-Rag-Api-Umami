@@ -157,4 +157,17 @@ class BigQuerySchemaService(
             false
         }
     }
+
+    /**
+     * Health check that returns the error detail instead of swallowing it.
+     */
+    fun healthCheckDetail(): String {
+        return try {
+            val datasetId = com.google.cloud.bigquery.DatasetId.of(projectId, dataset)
+            val ds = bigQuery.getDataset(datasetId)
+            if (ds != null) "OK" else "dataset '$dataset' not found in project '$projectId'"
+        } catch (e: Exception) {
+            "${e.javaClass.simpleName}: ${e.message}"
+        }
+    }
 }

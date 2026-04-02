@@ -329,13 +329,7 @@ fun Application.configureRouting() {
                         if (bqOk) {
                             emitEvent("debug", "BigQuery: connected")
                         } else if (bigQueryService != null) {
-                            // Re-run to capture the actual exception message
-                            val detail = try {
-                                bigQueryService.isHealthy()
-                                "returned false (dataset not found?)"
-                            } catch (e: Exception) {
-                                e.message ?: "unknown error"
-                            }
+                            val detail = bigQueryService.healthCheckDetail()
                             emitEvent("debug", "BigQuery: initialized but health check failed: $detail")
                         } else {
                             emitEvent("debug", "BigQuery: not configured (using mock schema for benchmark)")
