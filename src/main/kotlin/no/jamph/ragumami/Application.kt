@@ -87,7 +87,7 @@ fun Application.configureRouting() {
     val ollamaBaseUrl = environment.config.propertyOrNull("ollama.baseUrl")?.getString()
         ?: System.getenv("OLLAMA_BASE_URL") ?: Routes.ollamaUrl
     val ollamaModel = environment.config.propertyOrNull("ollama.model")?.getString()
-        ?: System.getenv("OLLAMA_MODEL") ?: runBlocking { OllamaClient.fetchDefaultModel(ollamaBaseUrl) }
+        ?: System.getenv("OLLAMA_MODEL") ?: Routes.defaultModel ?: runBlocking { OllamaClient.fetchDefaultModel(ollamaBaseUrl) }
     
     val ollamaClient = OllamaClient(ollamaBaseUrl, ollamaModel)
     
