@@ -96,7 +96,16 @@ fun Application.configureRouting() {
     //           2) GOOGLE_APPLICATION_CREDENTIALS file path
     //           3) application.conf settings
     val bigQueryService = try {
+        // NAIS mounts secret keys as env vars - try hyphen and underscore variants
+        val envChecks = mapOf(
+            "bigquery-credentials" to !System.getenv("bigquery-credentials").isNullOrBlank(),
+            "bigquery_credentials" to !System.getenv("bigquery_credentials").isNullOrBlank(),
+            "BIGQUERY_CREDENTIALS" to !System.getenv("BIGQUERY_CREDENTIALS").isNullOrBlank(),
+            "GOOGLE_APPLICATION_CREDENTIALS" to !System.getenv("GOOGLE_APPLICATION_CREDENTIALS").isNullOrBlank()
+        )
         val credentialsJson = System.getenv("bigquery-credentials")
+            ?: System.getenv("bigquery_credentials")
+            ?: System.getenv("BIGQUERY_CREDENTIALS")
         val credentialsPath = environment.config.propertyOrNull("bigquery.credentialsPath")?.getString()
             ?: System.getenv("GOOGLE_APPLICATION_CREDENTIALS")
         
@@ -108,28 +117,25 @@ fun Application.configureRouting() {
                     JsonParser.parseString(it).asJsonObject.get("project_id")?.asString
                 } catch (_: Exception) { null }
             }
+            ?: "fagtorsdag-prod-81a6"  // hardcoded fallback, same as frontend
         val dataset = environment.config.propertyOrNull("bigquery.dataset")?.getString()
             ?: System.getenv("BIGQUERY_DATASET")
             ?: "analytics_315058498"  // default Umami dataset
         val location = environment.config.propertyOrNull("bigquery.location")?.getString()
             ?: System.getenv("BIGQUERY_LOCATION") ?: "europe-north1"
         
-        if (projectId != null) {
-            if (!credentialsJson.isNullOrBlank()) {
-                log.info("Using BigQuery credentials from bigquery-credentials secret (NAIS)")
-            } else if (!credentialsPath.isNullOrBlank()) {
-                log.info("Using BigQuery credentials from file: $credentialsPath")
-            } else {
-                log.info("Using default BigQuery credentials (ADC)")
-            }
+        if (!credentialsJson.isNullOrBlank() || !credentialsPath.isNullOrBlank()) {
+            val source = envChecks.entries.first { it.value }.key
+            log.info("BigQuery: credentials found via '$source', initializing...")
             val queryService = BigQueryQueryService(projectId, dataset, location, credentialsPath, credentialsJson)
             BigQuerySchemaService(queryService)
         } else {
-            log.warn("BigQuery not configured: no projectId found")
+            val tried = envChecks.entries.joinToString(", ") { "${it.key}=${it.value}" }
+            log.warn("BigQuery: no credentials found. Checked: $tried")
             null
         }
     } catch (e: Exception) {
-        log.warn("Failed to initialize BigQuery service: ${e.message}")
+        log.warn("BigQuery: init failed: ${e.message}", e)
         null
     }
     
@@ -296,13 +302,20 @@ fun Application.configureRouting() {
                     try {
                         // Step 1: Test BigQuery connection
                         emitEvent("debug", "Testing BigQuery connection...")
+                        emitEvent("debug", "  bigQueryService initialized: ${bigQueryService != null}")
                         val bqOk = try {
                             bigQueryService?.isHealthy() ?: false
-                        } catch (e: Exception) { false }
+                        } catch (e: Exception) {
+                            emitEvent("debug", "  BigQuery health check error: ${e.message}")
+                            false
+                        }
                         if (bqOk) {
                             emitEvent("debug", "BigQuery: connected")
+                        } else if (bigQueryService != null) {
+                            emitEvent("debug", "BigQuery: initialized but health check failed")
                         } else {
                             emitEvent("debug", "BigQuery: not configured (using mock schema for benchmark)")
+                            emitEvent("debug", "  Checked env vars: bigquery-credentials=${!System.getenv("bigquery-credentials").isNullOrBlank()}, bigquery_credentials=${!System.getenv("bigquery_credentials").isNullOrBlank()}, BIGQUERY_CREDENTIALS=${!System.getenv("BIGQUERY_CREDENTIALS").isNullOrBlank()}, GOOGLE_APPLICATION_CREDENTIALS=${!System.getenv("GOOGLE_APPLICATION_CREDENTIALS").isNullOrBlank()}")
                         }
                         
                         // Step 2: Test Ollama connection
