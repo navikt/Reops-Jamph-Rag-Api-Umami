@@ -1,7 +1,5 @@
-package no.jamph.ragumami.umami.domain
+package no.jamph.ragumami.umami
 
-import no.jamph.ragumami.core.rag.RAGOrchestrator
-import no.jamph.ragumami.core.rag.QueryContext
 import no.jamph.ragumami.core.llm.OllamaClient
 import no.jamph.bigquery.BigQuerySchemaService
 
@@ -32,7 +30,15 @@ class UmamiRAGService(
             getFallbackSchemaContext()
         }
         
-        val prompt = buildSQLPrompt(naturalLanguageQuery, schemaContext, url)
+        // Parse siteId and urlPath from the query (frontend embeds them in natural language)
+        val siteId = extractSiteId(naturalLanguageQuery)
+        val urlPath = extractUrlPath(naturalLanguageQuery)
+        
+        // Extract the actual question after "Spørsmål:" or use full query
+        val question = naturalLanguageQuery.substringAfter("Spørsmål:", naturalLanguageQuery).trim()
+        
+        // Use universal prompt with 13 critical rules
+        val prompt = SqlPrompt.buildPrompt(question, siteId, urlPath, schemaContext)
         val raw = ollamaClient.generate(prompt)
         return extractSql(raw)
     }
@@ -74,28 +80,22 @@ class UmamiRAGService(
         """.trimIndent()
     }
     
-    private fun buildSQLPrompt(query: String, schema: String, url: String? = null): String {
-        val websiteContext = if (url != null) {
-            "- The user is viewing the website: $url — use this domain to find the matching website_id from the Available Websites list"
-        } else {
-            "- When user mentions a website (like \"Aksel\"), find the matching website_id from the Available Websites list"
-        }
-        return """
-        You are a BigQuery SQL expert for Umami Analytics.
-        
-        IMPORTANT INSTRUCTIONS:
-        - Generate ONLY valid BigQuery SQL, no explanations or markdown
-        - Use backticks (`) for table names
-        - Always use fully qualified table names as shown in schema
-        - ${'$'}websiteContext
-        - Add WHERE website_id = '<matched-id>' when querying event or event_data tables
-        - Return only the SQL query, nothing else
-        
-        $schema
-        
-        User Query: $query
-        
-        Generate the BigQuery SQL query:
-        """.trimIndent()
+    /**
+     * Extract website_id from query string (frontend embeds it as: website_id = 'xxx')
+     */
+    private fun extractSiteId(query: String): String {
+        val regex = Regex("website_id\\s*=\\s*'([^']+)'")
+        return regex.find(query)?.groupValues?.get(1) ?: "fb69e1e9-1bd3-4fd9-b700-9d035cbf44e1" // default to Aksel
+    }
+    
+    /**
+     * Extract url_path filter from query string (frontend embeds it as: url_path LIKE 'xxx' or url_path = 'xxx')
+     */
+    private fun extractUrlPath(query: String): String {
+        val likeRegex = Regex("url_path\\s+LIKE\\s+'([^']+)'")
+        val equalsRegex = Regex("url_path\\s*=\\s*'([^']+)'")
+        return likeRegex.find(query)?.groupValues?.get(1)
+            ?: equalsRegex.find(query)?.groupValues?.get(1)
+            ?: "/" // default to root
     }
 }
