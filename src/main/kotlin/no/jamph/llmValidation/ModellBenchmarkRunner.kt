@@ -1,5 +1,8 @@
 package no.jamph.llmValidation
 
+/*
+// Original version - commented out, using ModellBenchmarkRunner2.kt instead
+
 import kotlinx.coroutines.runBlocking
 import java.time.Instant
 import no.jamph.ragumami.Routes
@@ -54,3 +57,4 @@ fun main() {
     val results = runBenchmark(models)
     NettskjemaBenchmarkWriter().appendRows(results)
 }
+*/
