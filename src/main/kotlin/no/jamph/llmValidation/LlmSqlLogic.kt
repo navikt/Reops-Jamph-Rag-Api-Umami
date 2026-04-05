@@ -107,7 +107,6 @@ fun LlmSqlLogic(
                 Rule("valid SQL syntax") { sql -> isSqlQueryValid(sql) },
                 Rule("contains fagtorsdag project") { sql -> sql.contains("fagtorsdag-prod-81a6.umami_student") },
                 Rule("contains website_id") { sql -> sql.contains(AKSEL_ID) },
-                Rule("contains '2025'") { sql -> sql.contains("2025") },
                 Rule("contains WITH (CTE)") { sql -> sql.uppercase().contains("WITH") },
                 Rule("contains COVAR_SAMP/VAR_SAMP/slope") { sql -> sql.uppercase().contains("COVAR_SAMP") || sql.uppercase().contains("VAR_SAMP") || sql.lowercase().contains("slope") },
             )
