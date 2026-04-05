@@ -36,7 +36,8 @@ data class ShortSchemaLlmResult(
 )
 
 class ShortPromptTimer(
-    private val ollamaClient: OllamaClient
+    private val ollamaClient: OllamaClient,
+    private val debugLog: (String) -> Unit = {}
 ) {
     private val logger = LoggerFactory.getLogger(ShortPromptTimer::class.java)
 
@@ -60,6 +61,7 @@ class ShortPromptTimer(
             lastSql = extractSql(rawResponse)
             
             logger.info("SMALL_SCHEMA_LLM: iteration={} durationMs={}", iteration + 1, durationMs)
+            debugLog("  Short prompt ${iteration + 1}/$iterations: ${durationMs} ms")
         }
 
         val avgDuration = durations.average().toLong()

@@ -276,7 +276,8 @@ data class LongSchemaLlmResult(
 )
 
 class LongPromptTimer(
-    private val ollamaClient: OllamaClient
+    private val ollamaClient: OllamaClient,
+    private val debugLog: (String) -> Unit = {}
 ) {
     private val logger = LoggerFactory.getLogger(LongPromptTimer::class.java)
 
@@ -298,8 +299,9 @@ class LongPromptTimer(
             
             durations.add(durationMs)
             lastSql = extractSql(rawResponse)
-            
+
             logger.info("LARGE_SCHEMA_LLM: iteration={} durationMs={}", iteration + 1, durationMs)
+            debugLog("  Long prompt ${iteration + 1}/$iterations: ${durationMs} ms")
         }
 
         val avgDuration = durations.average().toLong()
