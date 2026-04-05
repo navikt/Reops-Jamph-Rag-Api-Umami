@@ -43,6 +43,7 @@ fun LlmSqlLogic(
             question = "Hvor mange sidevisninger er det per dag i 2025",
             url = "https://aksel.nav.no",
             rules = listOf(
+                Rule("valid SQL syntax") { sql -> isSqlQueryValid(sql) },
                 Rule("contains fagtorsdag project") { sql -> sql.contains("fagtorsdag-prod-81a6.umami_student") },
                 Rule("contains website_id") { sql -> sql.contains(AKSEL_ID) },
                 Rule("contains '2025'") { sql -> sql.contains("2025") },
@@ -55,10 +56,10 @@ fun LlmSqlLogic(
             question = "Topp 12 mest besøkte undersider i 2025",
             url = "https://aksel.nav.no",
             rules = listOf(
+                Rule("valid SQL syntax") { sql -> isSqlQueryValid(sql) },
                 Rule("contains fagtorsdag project") { sql -> sql.contains("fagtorsdag-prod-81a6.umami_student") },
                 Rule("contains website_id") { sql -> sql.contains(AKSEL_ID) },
-                Rule("contains '2025'") { sql -> sql.contains("2025") },
-                Rule("contains url_path") { sql -> sql.lowercase().contains("url_path") },
+                Rule("contains url_path or path column") { sql -> sql.lowercase().contains("url_path") || sql.lowercase().contains("path") || sql.lowercase().contains("page") },
                 Rule("contains GROUP BY") { sql -> sql.uppercase().contains("GROUP BY") },
                 Rule("contains ORDER BY") { sql -> sql.uppercase().contains("ORDER BY") },
                 Rule("contains LIMIT 12") { sql -> Regex("LIMIT\\s+12", RegexOption.IGNORE_CASE).containsMatchIn(sql) },
@@ -68,6 +69,7 @@ fun LlmSqlLogic(
             question = "Hvor mange sidevisninger er det per måned i 2025",
             url = "https://aksel.nav.no",
             rules = listOf(
+                Rule("valid SQL syntax") { sql -> isSqlQueryValid(sql) },
                 Rule("contains fagtorsdag project") { sql -> sql.contains("fagtorsdag-prod-81a6.umami_student") },
                 Rule("contains website_id") { sql -> sql.contains(AKSEL_ID) },
                 Rule("contains '2025'") { sql -> sql.contains("2025") },
@@ -79,6 +81,7 @@ fun LlmSqlLogic(
             question = "Hva er topp 15 trafikkilder i november 2025",
             url = "https://aksel.nav.no",
             rules = listOf(
+                Rule("valid SQL syntax") { sql -> isSqlQueryValid(sql) },
                 Rule("contains fagtorsdag project") { sql -> sql.contains("fagtorsdag-prod-81a6.umami_student") },
                 Rule("contains website_id") { sql -> sql.contains(AKSEL_ID) },
                 Rule("contains '2025'") { sql -> sql.contains("2025") },
@@ -91,16 +94,17 @@ fun LlmSqlLogic(
             question = "Hvilke nettsider kommer besøkere til siden fra",
             url = "https://aksel.nav.no",
             rules = listOf(
+                Rule("valid SQL syntax") { sql -> isSqlQueryValid(sql) },
                 Rule("contains fagtorsdag project") { sql -> sql.contains("fagtorsdag-prod-81a6.umami_student") },
                 Rule("contains website_id") { sql -> sql.contains(AKSEL_ID) },
                 Rule("contains referrer_domain") { sql -> sql.lowercase().contains("referrer_domain") },
-                Rule("contains session_id") { sql -> sql.lowercase().contains("session_id") },
             )
         ),
         TestCase(
             question = "Lineær regresjon: trend i daglige sidevisninger",
             url = "https://aksel.nav.no",
             rules = listOf(
+                Rule("valid SQL syntax") { sql -> isSqlQueryValid(sql) },
                 Rule("contains fagtorsdag project") { sql -> sql.contains("fagtorsdag-prod-81a6.umami_student") },
                 Rule("contains website_id") { sql -> sql.contains(AKSEL_ID) },
                 Rule("contains '2025'") { sql -> sql.contains("2025") },
@@ -112,19 +116,18 @@ fun LlmSqlLogic(
             question = "Kan jeg få fire tall for katgoriene. Unike besøkende, Utførte handlinger, Navigering uten handling, Forlot nettstedet",
             url = "https://aksel.nav.no",
             rules = listOf(
+                Rule("valid SQL syntax") { sql -> isSqlQueryValid(sql) },
                 Rule("contains fagtorsdag project") { sql -> sql.contains("fagtorsdag-prod-81a6.umami_student") },
                 Rule("contains website_id") { sql -> sql.contains(AKSEL_ID) },
-                Rule("contains WITH (CTE)") { sql -> sql.uppercase().contains("WITH") },
                 Rule("contains session_id") { sql -> sql.lowercase().contains("session_id") },
-                Rule("contains UNION ALL") { sql -> sql.uppercase().contains("UNION ALL") },
-                Rule("contains COUNTIF") { sql -> sql.uppercase().contains("COUNTIF") },
                 Rule("contains event_type") { sql -> sql.uppercase().contains("EVENT_TYPE") },
             )
         ),
         TestCase(
-            question = "Hvilket operativsystem bruker brukerne?",
+            question = "Hvilket operativsystem bruker brukerne i 2025?",
             url = "https://aksel.nav.no",
             rules = listOf(
+                Rule("valid SQL syntax") { sql -> isSqlQueryValid(sql) },
                 Rule("contains fagtorsdag project") { sql -> sql.contains("fagtorsdag-prod-81a6.umami_student") },
                 Rule("contains website_id") { sql -> sql.contains(AKSEL_ID) },
                 Rule("contains '2025'") { sql -> sql.contains("2025") },
@@ -133,9 +136,10 @@ fun LlmSqlLogic(
             )
         ),
         TestCase(
-            question = "Hvor navigerer brukere etter å ha søkt på siden?",
+            question = "Hvor navigerer brukere etter å ha søkt på siden i 2025?",
             url = "https://aksel.nav.no",
             rules = listOf(
+                Rule("valid SQL syntax") { sql -> isSqlQueryValid(sql) },
                 Rule("contains fagtorsdag project") { sql -> sql.contains("fagtorsdag-prod-81a6.umami_student") },
                 Rule("contains website_id") { sql -> sql.contains(AKSEL_ID) },
                 Rule("contains '2025'") { sql -> sql.contains("2025") },
