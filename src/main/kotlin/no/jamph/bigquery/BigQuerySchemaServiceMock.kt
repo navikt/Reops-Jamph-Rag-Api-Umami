@@ -70,7 +70,7 @@ Columns:
   - referrer_query (STRING, NULLABLE)
   - referrer_domain (STRING, NULLABLE)
   - page_title (STRING, NULLABLE)
-  - event_type (INT64, NULLABLE)
+  - event_type (INT64, NULLABLE) - 1: page view, 2: custom event
   - event_name (STRING, NULLABLE)
   - visit_id (STRING, NULLABLE)
   - tag (STRING, NULLABLE)

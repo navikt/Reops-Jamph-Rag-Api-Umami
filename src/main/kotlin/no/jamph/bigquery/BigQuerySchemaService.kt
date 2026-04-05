@@ -118,7 +118,8 @@ class BigQuerySchemaService(
                 schemaBuilder.appendLine("Columns:")
                 schema.columns.forEach { col ->
                     val desc = col.description?.let { " - $it" } ?: ""
-                    schemaBuilder.appendLine("  - ${col.name} (${col.type}, ${col.mode})$desc")
+                    val extraInfo = if (col.name == "event_type") " - 1: page view, 2: custom event" else ""
+                    schemaBuilder.appendLine("  - ${col.name} (${col.type}, ${col.mode})$desc$extraInfo")
                 }
             } catch (e: Exception) {
                 schemaBuilder.appendLine("\nTable: `$projectId.$dataset.$tableName` - Error reading schema: ${e.message}")
