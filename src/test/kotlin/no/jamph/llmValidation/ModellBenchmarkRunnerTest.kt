@@ -25,6 +25,10 @@ class ModellBenchmarkRunnerTest {
             timestamp       = "2025-01-01T00:00:00Z",
             sqlAccuracy     = 0.85,
             dialectAccuracy = 0.75,
+            averageCostMB   = 55.5,
+            endToEndMs      = 1500L,
+            longPromptMs    = 3200L,
+            shortPromptMs   = 800L,
             tokensPerSecond = 12.5,
             promptTokens    = 100,
             responseTokens  = 50,
@@ -34,6 +38,10 @@ class ModellBenchmarkRunnerTest {
         assertEquals("2025-01-01T00:00:00Z", result.timestamp)
         assertEquals(0.85, result.sqlAccuracy)
         assertEquals(0.75, result.dialectAccuracy)
+        assertEquals(55.5, result.averageCostMB)
+        assertEquals(1500L, result.endToEndMs)
+        assertEquals(3200L, result.longPromptMs)
+        assertEquals(800L, result.shortPromptMs)
         assertEquals(12.5, result.tokensPerSecond)
         assertEquals(100, result.promptTokens)
         assertEquals(50, result.responseTokens)
@@ -42,14 +50,14 @@ class ModellBenchmarkRunnerTest {
 
     @Test
     fun `ModelBenchmarkResult equality holds for identical instances`() {
-        val r1 = ModelBenchmarkResult("m1", "2025-01-01T00:00:00Z", 1.0, 1.0, 10.0, 10, 20, 1000L)
-        val r2 = ModelBenchmarkResult("m1", "2025-01-01T00:00:00Z", 1.0, 1.0, 10.0, 10, 20, 1000L)
+        val r1 = ModelBenchmarkResult("m1", "2025-01-01T00:00:00Z", 1.0, 1.0, 50.0, 1000L, 2000L, 500L, 10.0, 10, 20, 1000L)
+        val r2 = ModelBenchmarkResult("m1", "2025-01-01T00:00:00Z", 1.0, 1.0, 50.0, 1000L, 2000L, 500L, 10.0, 10, 20, 1000L)
         assertEquals(r1, r2)
     }
 
     @Test
     fun `ModelBenchmarkResult copy changes only the specified field`() {
-        val original = ModelBenchmarkResult("llama3", "ts", 0.5, 0.6, 5.0, 10, 20, 500L)
+        val original = ModelBenchmarkResult("llama3", "ts", 0.5, 0.6, 50.0, 1000L, 2000L, 500L, 5.0, 10, 20, 500L)
         val copy     = original.copy(model = "deepseek")
         assertEquals("deepseek", copy.model)
         assertEquals("llama3", original.model)
@@ -59,17 +67,19 @@ class ModellBenchmarkRunnerTest {
 
     @Test
     fun `ModelBenchmarkResult with all-zero values is valid`() {
-        val result = ModelBenchmarkResult("model", "ts", 0.0, 0.0, 0.0, 0, 0, 0L)
+        val result = ModelBenchmarkResult("model", "ts", 0.0, 0.0, 0.0, 0L, 0L, 0L, 0.0, 0, 0, 0L)
         assertEquals(0.0, result.sqlAccuracy)
         assertEquals(0.0, result.dialectAccuracy)
+        assertEquals(0.0, result.averageCostMB)
+        assertEquals(0L, result.endToEndMs)
         assertEquals(0.0, result.tokensPerSecond)
         assertEquals(0L, result.evalDurationMs)
     }
 
     @Test
     fun `ModelBenchmarkResult hashCode matches for equal instances`() {
-        val r1 = ModelBenchmarkResult("md", "ts", 0.5, 0.5, 5.0, 5, 5, 500L)
-        val r2 = ModelBenchmarkResult("md", "ts", 0.5, 0.5, 5.0, 5, 5, 500L)
+        val r1 = ModelBenchmarkResult("md", "ts", 0.5, 0.5, 50.0, 1000L, 2000L, 500L, 5.0, 5, 5, 500L)
+        val r2 = ModelBenchmarkResult("md", "ts", 0.5, 0.5, 50.0, 1000L, 2000L, 500L, 5.0, 5, 5, 500L)
         assertEquals(r1.hashCode(), r2.hashCode())
     }
 
