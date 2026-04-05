@@ -5,10 +5,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.*
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration
 import kotlinx.coroutines.runBlocking
 import no.jamph.ragumami.core.llm.OllamaClient
-import no.jamph.ragumami.umami.UmamiRAGService
 import org.junit.jupiter.api.*
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 
@@ -19,18 +16,12 @@ class LongPromptTimerTest {
     private lateinit var wireMock: WireMockServer
     private lateinit var measurer: LongPromptTimer
 
-    private val longPrompt = "a".repeat(LONG_CONTEXT_THRESHOLD + 1)
-    private val longResponse = "b".repeat(LONG_CONTEXT_THRESHOLD + 1)
-    private val testUrl = "https://test.example.com"
-    private val testWebsites = emptyList<no.jamph.bigquery.Website>()
-
     @BeforeEach
     fun setup() {
         wireMock = WireMockServer(WireMockConfiguration.options().dynamicPort())
         wireMock.start()
         val ollamaClient = OllamaClient("http://localhost:${wireMock.port()}", "qwen2.5-coder:7b")
-        val ragService = UmamiRAGService(ollamaClient, null)
-        measurer = LongPromptTimer(ragService)
+        measurer = LongPromptTimer(ollamaClient)
     }
 
     @AfterEach
@@ -39,73 +30,25 @@ class LongPromptTimerTest {
     }
 
     @Test
-    fun `measureLongContext returns correct query`() = runBlocking {
+    fun `measureLlmWithLargeSchema runs 10 iterations and returns average`() = runBlocking {
         wireMock.stubFor(
             post(urlEqualTo("/api/generate"))
                 .willReturn(
                     aResponse()
                         .withStatus(200)
-                        .withBody("{\"response\":\"$longResponse\"}")
+                        .withBody("{\"response\":\"SELECT * FROM events;\"}")
                 )
         )
 
-        val result = measurer.measureLongContext(longPrompt, testUrl, testWebsites)
+        val result = measurer.measureLlmWithLargeSchema("Count events", iterations = 10)
 
-        assertEquals(longPrompt, result.query)
+        assertTrue(result.averageDurationMs >= 0)
+        assertTrue(result.sql.contains("SELECT"))
+        assertTrue(result.iterations == 10)
     }
 
     @Test
-    fun `measureLongContext records queryLength and sqlLength`() = runBlocking {
-        wireMock.stubFor(
-            post(urlEqualTo("/api/generate"))
-                .willReturn(
-                    aResponse()
-                        .withStatus(200)
-                        .withBody("{\"response\":\"$longResponse\"}")
-                )
-        )
-
-        val result = measurer.measureLongContext(longPrompt, testUrl, testWebsites)
-
-        assertTrue(result.queryLength > LONG_CONTEXT_THRESHOLD)
-        assertTrue(result.sqlLength > 0)
-    }
-
-    @Test
-    fun `exceedsThreshold is true when response is over threshold`() = runBlocking {
-        wireMock.stubFor(
-            post(urlEqualTo("/api/generate"))
-                .willReturn(
-                    aResponse()
-                        .withStatus(200)
-                        .withBody("{\"response\":\"$longResponse\"}")
-                )
-        )
-
-        val result = measurer.measureLongContext(longPrompt, testUrl, testWebsites)
-
-        assertTrue(result.exceedsThreshold, "Expected sql to exceed threshold of $LONG_CONTEXT_THRESHOLD chars")
-    }
-
-    @Test
-    fun `exceedsThreshold is false when response is under threshold`() = runBlocking {
-        val shortResponse = "SELECT * FROM events;"
-        wireMock.stubFor(
-            post(urlEqualTo("/api/generate"))
-                .willReturn(
-                    aResponse()
-                        .withStatus(200)
-                        .withBody("{\"response\":\"$shortResponse\"}")
-                )
-        )
-
-        val result = measurer.measureLongContext(longPrompt, testUrl, testWebsites)
-
-        assertFalse(result.exceedsThreshold, "Expected sql to be under threshold of $LONG_CONTEXT_THRESHOLD chars")
-    }
-
-    @Test
-    fun `measureLongContext records non-negative durationMs`() = runBlocking {
+    fun `measureLlmWithLargeSchema records non-negative duration`() = runBlocking {
         wireMock.stubFor(
             post(urlEqualTo("/api/generate"))
                 .willReturn(
@@ -115,19 +58,8 @@ class LongPromptTimerTest {
                 )
         )
 
-        val result = measurer.measureLongContext(longPrompt, testUrl, testWebsites)
+        val result = measurer.measureLlmWithLargeSchema("Test query", iterations = 5)
 
-        assertTrue(result.durationMs >= 0)
-    }
-
-    @Test
-    fun `measureLongContext throws when prompt is below threshold`() {
-        val shortPrompt = "too short"
-
-        assertThrows<IllegalArgumentException> {
-            runBlocking {
-                measurer.measureLongContext(shortPrompt, testUrl, testWebsites)
-            }
-        }
+        assertTrue(result.averageDurationMs >= 0)
     }
 }
