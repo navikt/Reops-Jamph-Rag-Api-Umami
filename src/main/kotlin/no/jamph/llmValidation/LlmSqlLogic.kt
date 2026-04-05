@@ -49,7 +49,7 @@ fun LlmSqlLogic(
                 Rule("contains '2025'") { sql -> sql.contains("2025") },
                 Rule("contains EVENT_TYPE") { sql -> sql.uppercase().contains("EVENT_TYPE") },
                 Rule("contains GROUP BY") { sql -> sql.uppercase().contains("GROUP BY") },
-                Rule("contains FORMAT_TIMESTAMP/DATE()/EXTRACT(DAY") { sql -> sql.contains("FORMAT_TIMESTAMP") || sql.contains("DATE(") || sql.uppercase().contains("EXTRACT(DAY") },
+                Rule("contains FORMAT_TIMESTAMP/DATE()/EXTRACT(DAY)/DATE_TRUNC") { sql -> sql.contains("FORMAT_TIMESTAMP") || sql.contains("DATE(") || sql.uppercase().contains("EXTRACT(DAY") || sql.uppercase().contains("DATE_TRUNC") },
             )
         ),
         TestCase(
