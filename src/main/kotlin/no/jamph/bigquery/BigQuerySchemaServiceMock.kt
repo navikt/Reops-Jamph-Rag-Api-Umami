@@ -72,7 +72,7 @@ Columns:
   - referrer_domain (STRING, NULLABLE) - Origin domain of visitor
   - page_title (STRING, NULLABLE)
   - event_type (INT64, NULLABLE) - 1: page view, 2: custom event
-  - event_name (STRING, NULLABLE) - Name of custom event (only set when event_type = 2)
+  - event_name (STRING, NULLABLE) - Known values: navigere, sok, sidebar-subnav, god-praksis-chip, client-error, last ned, feedback-designsystem, 404, accordion lukket, skjema fullfort, accordion åpnet (only set when event_type = 2)
   - visit_id (STRING, NULLABLE) - Unique identifier for a specific visit within a session
   - tag (STRING, NULLABLE)
   - utm_source (STRING, NULLABLE)

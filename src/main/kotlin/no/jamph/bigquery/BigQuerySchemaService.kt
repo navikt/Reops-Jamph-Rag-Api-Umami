@@ -123,7 +123,7 @@ class BigQuerySchemaService(
                         "event_type" -> " - 1: page view, 2: custom event"
                         "session_id" -> " - Unique identifier for a visitor session"
                         "visit_id" -> " - Unique identifier for a specific visit within a session"
-                        "event_name" -> " - Name of custom event (only set when event_type = 2)"
+                        "event_name" -> " - Known values: navigere, sok, sidebar-subnav, god-praksis-chip, client-error, last ned, feedback-designsystem, 404, accordion lukket, skjema fullfort, accordion åpnet (only set when event_type = 2)"
                         "session_parameters" -> " - STRUCT fields: data_key STRING, string_value STRING, number_value FLOAT64, date_value TIMESTAMP, data_type INT64. Unnest with: CROSS JOIN UNNEST(session_parameters) AS p"
                         "event_parameters" -> " - STRUCT fields: data_key STRING, string_value STRING, number_value FLOAT64, date_value TIMESTAMP, data_type INT64. Unnest with: CROSS JOIN UNNEST(event_parameters) AS p"
                         "referrer_domain" -> " - Origin domain of visitor"
