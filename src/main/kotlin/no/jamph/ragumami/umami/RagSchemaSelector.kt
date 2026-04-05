@@ -4,19 +4,19 @@ import no.jamph.ragumami.core.llm.OllamaClient
 
 object RagSchemaSelector {
     suspend fun selectSchema(question: String, ollamaClient: OllamaClient): String {
-        val validOptions = setOf("linear", "actions", "nothing")
+        val validOptions = setOf("linear", "actions", "default")
         val maxRetries = 3
         
-        repeat(maxRetries) { attempt ->
+        for (attempt in 0 until maxRetries) {
             val prompt = if (attempt == 0) {
                 """
-                Output only one word: {nothing, linear, actions}
+                Output only one word: {default, linear, actions}
                 
-                Schema Additions:
-                - nothing: The default option for most cases
-                - linear: When user asks "how has the trend changed over a time period"
-                - actions: Adds extra context for finding actions on the site (clicks on accordions, buttons)
-                
+                What is the context of the question:
+                - default: Almost all requests Default for ALL counting, aggregating, grouping queries. Examples: "count per day", "views by month", "total users", "how many X", "top pages". Anything that is easy for an llm to create SQL for.
+                - linear: ONLY For explicit TREND/REGRESSION analysis. Examples: "is traffic INCREASING", "what's the GROWTH RATE", "regression analysis", "is there an UPWARD trend"
+                - actions: ONLY For specific click/interaction events. Examples: "button clicks", "accordion opens", "form submissions"
+                                
                 Question: $question
                 
                 Output one word:
@@ -24,7 +24,7 @@ object RagSchemaSelector {
             } else {
                 """
                 OUTPUT EXACTLY ONE OF THESE WORDS:
-                nothing
+                default
                 linear
                 actions
                 
@@ -46,13 +46,16 @@ object RagSchemaSelector {
                 return when (extracted) {
                     "linear" -> LINEAR_ADDITION
                     "actions" -> ACTIONS_ADDITION
-                    else -> ""
+                    "default" -> DEFAULT_ADDITION
+                    else -> throw IllegalStateException("Unexpected schema option: $extracted")
                 }
             }
         }
         
-        return ""
+        return DEFAULT_ADDITION
     }
+    
+    private const val DEFAULT_ADDITION = ""
     
     private const val LINEAR_ADDITION = """
 - For linear regression, use this template structure:

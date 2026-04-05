@@ -42,7 +42,7 @@ fun DialectValidetaLlmToSql(
             "hvor dro folk etter denne siden i 2025?",
             "hvor dro folk etter denne siden i hele 2025?",
             "Kva gjorde brukarane etter denne sida i 2025?",
-            "Kva gjorde folk etter på å vært Aksel i 2025?",
+            "Kva gjorde folk etter på å vært sida i 2025?",
         )
 
         val sqlAnswerSidevisninger2025 = """
