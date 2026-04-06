@@ -1,7 +1,6 @@
 package no.jamph.llmValidation
 
 import com.google.cloud.bigquery.BigQuery
-import com.google.cloud.bigquery.BigQueryOptions
 import no.jamph.bigquery.BigQuerySchemaServiceMock
 import no.jamph.ragumami.core.llm.OllamaClient
 import no.jamph.ragumami.Routes
@@ -25,21 +24,22 @@ data class CostResult(
 
 private fun getOptimizedQueries(): List<Pair<String, String>> = listOf(
     "Unique users by device" to """
-        SELECT 
-            COUNT(DISTINCT session_id) as unique_users,
-            device,
+        SELECT
+            COUNT(DISTINCT s.session_id) as unique_users,
+            s.device,
             COUNT(*) as total_events
-        FROM `fagtorsdag-prod-81a6.umami_student.event`
-        WHERE website_id = '$AKSEL_ID'
-            AND event_type = 1
-            AND created_at >= '2025-01-01'
-        GROUP BY device
+        FROM `fagtorsdag-prod-81a6.umami_student.event` e
+        JOIN `fagtorsdag-prod-81a6.umami_student.session` s ON e.session_id = s.session_id
+        WHERE e.website_id = '$AKSEL_ID'
+            AND e.event_type = 1
+            AND e.created_at >= '2025-01-01'
+        GROUP BY s.device
         ORDER BY total_events DESC
         LIMIT 100
     """.trimIndent(),
-    
+
     "Activity overview" to """
-        SELECT 
+        SELECT
             DATE(created_at) as date,
             event_type,
             COUNT(*) as event_count,
@@ -51,9 +51,9 @@ private fun getOptimizedQueries(): List<Pair<String, String>> = listOf(
         ORDER BY date DESC
         LIMIT 100
     """.trimIndent(),
-    
+
     "URL paths with sessions" to """
-        SELECT 
+        SELECT
             url_path,
             COUNT(DISTINCT session_id) as unique_sessions,
             COUNT(*) as total_visits
@@ -65,9 +65,9 @@ private fun getOptimizedQueries(): List<Pair<String, String>> = listOf(
         ORDER BY total_visits DESC
         LIMIT 50
     """.trimIndent(),
-    
+
     "Events per day with variants" to """
-        SELECT 
+        SELECT
             DATE(created_at) as date,
             COUNT(*) as event_count,
             COUNT(DISTINCT event_name) as unique_event_names,
@@ -79,10 +79,10 @@ private fun getOptimizedQueries(): List<Pair<String, String>> = listOf(
         ORDER BY date DESC
         LIMIT 100
     """.trimIndent(),
-    
+
     "Session journey with time" to """
         WITH session_page_counts AS (
-            SELECT 
+            SELECT
                 session_id,
                 COUNT(*) as page_count
             FROM `fagtorsdag-prod-81a6.umami_student.event`
@@ -93,7 +93,7 @@ private fun getOptimizedQueries(): List<Pair<String, String>> = listOf(
             HAVING COUNT(*) > 3
         ),
         session_events AS (
-            SELECT 
+            SELECT
                 e.session_id,
                 e.url_path,
                 e.created_at,
@@ -104,7 +104,7 @@ private fun getOptimizedQueries(): List<Pair<String, String>> = listOf(
                 AND e.event_type = 1
                 AND e.created_at >= '2025-01-01'
         )
-        SELECT 
+        SELECT
             session_id,
             url_path,
             created_at,
@@ -112,18 +112,78 @@ private fun getOptimizedQueries(): List<Pair<String, String>> = listOf(
         FROM session_events
         ORDER BY session_id, created_at
         LIMIT 500
-    """.trimIndent()
+    """.trimIndent(),
+
+    "Top referrer domains" to """
+        SELECT
+            referrer_domain,
+            COUNT(*) as visits
+        FROM `fagtorsdag-prod-81a6.umami_student.event`
+        WHERE website_id = '$AKSEL_ID'
+            AND event_type = 1
+            AND created_at >= '2025-01-01'
+            AND referrer_domain IS NOT NULL
+        GROUP BY referrer_domain
+        ORDER BY visits DESC
+        LIMIT 50
+    """.trimIndent(),
+
+    "Browser breakdown" to """
+        SELECT
+            s.browser,
+            COUNT(DISTINCT s.session_id) as unique_sessions
+        FROM `fagtorsdag-prod-81a6.umami_student.session` s
+        WHERE s.website_id = '$AKSEL_ID'
+            AND s.created_at >= '2025-01-01'
+        GROUP BY s.browser
+        ORDER BY unique_sessions DESC
+    """.trimIndent(),
+
+    "Country breakdown" to """
+        SELECT
+            s.country,
+            COUNT(DISTINCT s.session_id) as unique_sessions
+        FROM `fagtorsdag-prod-81a6.umami_student.session` s
+        WHERE s.website_id = '$AKSEL_ID'
+            AND s.created_at >= '2025-01-01'
+        GROUP BY s.country
+        ORDER BY unique_sessions DESC
+    """.trimIndent(),
+
+    "Custom events summary" to """
+        SELECT
+            event_name,
+            COUNT(*) as occurrences
+        FROM `fagtorsdag-prod-81a6.umami_student.event`
+        WHERE website_id = '$AKSEL_ID'
+            AND event_type = 2
+            AND event_name IS NOT NULL
+            AND created_at >= '2025-01-01'
+        GROUP BY event_name
+        ORDER BY occurrences DESC
+    """.trimIndent(),
+
+    "Pageviews per month" to """
+        SELECT
+            FORMAT_TIMESTAMP('%Y-%m', created_at) as month,
+            COUNT(*) as pageviews
+        FROM `fagtorsdag-prod-81a6.umami_student.event`
+        WHERE website_id = '$AKSEL_ID'
+            AND event_type = 1
+            AND created_at >= '2025-01-01'
+        GROUP BY month
+        ORDER BY month
+    """.trimIndent(),
 )
 
 fun CostValidateLLmEstimator(
     modelName: String,
-    iterations: Int = 10,
     bigquery: BigQuery = defaultBigQuery(),
     debugLog: (String) -> Unit = ::println
 ): Double = runBlocking {
     val schemaService = BigQuerySchemaServiceMock()
     val websites = schemaService.getWebsites()
-    
+
     val ollamaClient = OllamaClient(
         baseUrl = System.getenv("OLLAMA_BASE_URL") ?: Routes.ollamaUrl,
         model = modelName
@@ -131,93 +191,61 @@ fun CostValidateLLmEstimator(
     val ragService = UmamiRAGService(ollamaClient, schemaService)
 
     val optimizedQueries = getOptimizedQueries()
-    
-    debugLog("=== Calculating Expected Costs from Optimized Queries ===")
-    val expectedCosts = optimizedQueries.mapIndexed { index, (name, sql) ->
-        try {
-            val costMB = estimateCostInMB(sql, bigquery)
-            debugLog("${index + 1}. $name: ${costMB.format(2)} MB")
-            costMB
-        } catch (e: Exception) {
-            debugLog("${index + 1}. $name: Error - ${e.message}")
-            50.0
-        }
-    }
-    debugLog("=============================")
-    debugLog("")
 
-    val testCases = listOf(
-        CostTestCase(
-            question = "Hvor mange unike brukere har vi egentlig hatt, og hvilke enheter brukte de, og hvilke sider besøkte de, i detalj?",
-            url = "https://aksel.nav.no",
-            expectedCostMB = expectedCosts[0]
-        ),
-        CostTestCase(
-            question = "Gi meg en full oversikt over all aktivitet, inkludert sessions, events, og alle metadata-felter",
-            url = "https://aksel.nav.no",
-            expectedCostMB = expectedCosts[1]
-        ),
-        CostTestCase(
-            question = "Jeg trenger å se alle url_path som noen gang er besøkt, sammen med alle sessions som har besøkt dem, og alle events i hver session",
-            url = "https://aksel.nav.no",
-            expectedCostMB = expectedCosts[2]
-        ),
-        CostTestCase(
-            question = "Tell antall events per dag, men jeg vil også se alle event_name variantene og alle url_path variantene per dag",
-            url = "https://aksel.nav.no",
-            expectedCostMB = expectedCosts[3]
-        ),
-        CostTestCase(
-            question = "Finn alle sessions hvor brukeren har besøkt mer enn 3 sider, og vis meg hele sesjonsforløpet med tid mellom hver side",
-            url = "https://aksel.nav.no",
-            expectedCostMB = expectedCosts[4]
-        ),
-    )
+    debugLog("--- Calculating expected costs from reference queries ---")
+    val expectedCosts = optimizedQueries.mapIndexed { index, (name, sql) ->
+        val costMB = estimateCostInMB(sql, bigquery)
+        debugLog("  Cost test ${index + 1}/${optimizedQueries.size} $name: ${costMB.format(2)} MB")
+        costMB
+    }
+
+    val testCases = optimizedQueries.mapIndexed { index, (_, _) ->
+        val question = when (index) {
+            0 -> "Hvem bruker siden og hva slags utstyr har de?"
+            1 -> "Hva skjer på siden?"
+            2 -> "Hvilke sider finnes på nettstedet?"
+            3 -> "Hva gjør brukerne dag for dag?"
+            4 -> "Hvordan beveger brukerne seg rundt på siden?"
+            5 -> "Hvor kommer trafikken fra?"
+            6 -> "Hva slags teknologi bruker de som besøker siden?"
+            7 -> "Hvor i verden er brukerne?"
+            8 -> "Hva interagerer brukerne med?"
+            9 -> "Hvor populær er siden?"
+            else -> ""
+        }
+        CostTestCase(question = question, url = "https://aksel.nav.no", expectedCostMB = expectedCosts[index])
+    }
 
     val results = mutableListOf<CostResult>()
 
-    testCases.forEach { testCase ->
-        debugLog("Testing: ${testCase.question}")
-        
-        val costs = mutableListOf<Double>()
-        
-        repeat(iterations) { iteration ->
-            val sql = ragService.generateSQL(testCase.question, testCase.url, websites)
-            
-            if (isSqlQueryValid(sql)) {
-                val costMB = estimateCostInMB(sql, bigquery)
-                costs.add(costMB)
-                debugLog("  Iteration ${iteration + 1}: ${costMB.format(2)} MB")
-            } else {
-                debugLog("  Iteration ${iteration + 1}: Invalid SQL")
+    testCases.forEachIndexed { index, testCase ->
+        debugLog("  Cost test ${index + 1}/${testCases.size}: ${testCase.question}")
+        val sql = ragService.generateSQL(testCase.question, testCase.url, websites)
+
+        val costMB = if (isSqlQueryValid(sql)) {
+            try {
+                val c = estimateCostInMB(sql, bigquery)
+                debugLog("    ${c.format(2)} MB (expected: ${testCase.expectedCostMB.format(2)} MB)")
+                c
+            } catch (e: Exception) {
+                debugLog("    failed - ${e.message}")
+                null
             }
+        } else {
+            debugLog("    invalid SQL")
+            null
         }
-        
-        val avgCost = if (costs.isNotEmpty()) costs.average() else 0.0
-        val withinRange = avgCost <= testCase.expectedCostMB * 1.5
-        
-        results.add(
-            CostResult(
-                question = testCase.question,
-                averageCostMB = avgCost,
-                expectedCostMB = testCase.expectedCostMB,
-                withinRange = withinRange
-            )
-        )
-        
-        debugLog("  → Average: ${avgCost.format(2)} MB (expected: ${testCase.expectedCostMB} MB) ${if (withinRange) "✓" else "✗"}")
-        debugLog("")
+
+        if (costMB != null) {
+            val withinRange = costMB <= testCase.expectedCostMB * 1.5
+            results.add(CostResult(testCase.question, costMB, testCase.expectedCostMB, withinRange))
+            debugLog("  → ${if (withinRange) "PASS ✓" else "FAIL ✗"}")
+        }
     }
 
-    val overallAverageCost = if (results.isNotEmpty()) {
-        results.map { it.averageCostMB }.average()
-    } else {
-        0.0
-    }
-    
-    debugLog("=== Overall Average Cost: ${overallAverageCost.format(2)} MB ===")
-    
-    overallAverageCost
+    val totalCost = if (results.isNotEmpty()) results.sumOf { it.averageCostMB } else 0.0
+    debugLog("  Total cost: ${totalCost.format(2)} MB")
+    totalCost
 }
 
 private fun Double.format(decimals: Int) = "%.${decimals}f".format(this)

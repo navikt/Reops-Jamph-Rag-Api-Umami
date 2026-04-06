@@ -57,7 +57,7 @@ fun runBenchmark(
     debugLog("  Dialect accuracy: ${"%.0f".format(dialectAccuracy * 100)}%")
 
     val averageCostMB = costValidateFn(model, debugLog)
-    debugLog("  Avg cost:         ${"%.2f".format(averageCostMB)} MB")
+    debugLog("  Total cost:       ${"%.2f".format(averageCostMB)} MB")
 
     debugLog("--- Measuring end-to-end ---")
     val endToEndMs = endToEndTimerFn("https://aksel.nav.no", model, debugLog)

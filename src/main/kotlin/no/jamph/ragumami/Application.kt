@@ -450,7 +450,7 @@ fun Application.configureRouting() {
                         emitEvent("debug", "Timestamp:          ${Instant.now()}")
                         emitEvent("debug", "SQL accuracy:       ${"%.0f".format(sqlAccuracy * 100)}%")
                         emitEvent("debug", "Dialect accuracy:   ${"%.0f".format(dialectAccuracy * 100)}%")
-                        emitEvent("debug", "Avg cost:           ${"%.2f".format(avgCostMB)} MB")
+                        emitEvent("debug", "Total cost:         ${"%.2f".format(avgCostMB)} MB")
                         emitEvent("debug", "End-to-end:         $endToEndMs ms")
                         emitEvent("debug", "Long prompt:        $longPromptMs ms")
                         emitEvent("debug", "Short prompt:       $shortPromptMs ms")
