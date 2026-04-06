@@ -2,5 +2,5 @@
   "frontendUrl":  "https://jamph.ekstern.dev.nav.no",
   "ragApiUrl":    "https://jamph-rag-api-umami.ekstern.dev.nav.no",
   "ollamaUrl":    "https://jamph-ollama.ekstern.dev.nav.no",
-  "defaultModel": "qwen2.5-coder:7b"
+  "defaultModel": "DeepSeek-R1-Distill-Qwen-7B"
 }
