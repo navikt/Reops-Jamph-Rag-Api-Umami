@@ -5,6 +5,7 @@ import no.jamph.ragumami.core.llm.OllamaClient
 import no.jamph.ragumami.Routes
 import no.jamph.ragumami.umami.UmamiRAGService
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.supervisorScope
 
 private const val AKSEL_ID = "fb69e1e9-1bd3-4fd9-b700-9d035cbf44e1"
 
@@ -28,7 +29,7 @@ fun LlmSqlLogic(
         ).generate(prompt)
     },
     debugLog: (String) -> Unit = ::println
-): Double = runBlocking {
+): Double = runBlocking { supervisorScope {
     val schemaService = BigQuerySchemaServiceMock()
     val websites = schemaService.getWebsites()
     
@@ -153,20 +154,23 @@ fun LlmSqlLogic(
     testCases.forEachIndexed { index, testCase ->
         debugLog("  SQL test ${index + 1}/${testCases.size}: ${testCase.question}")
         debugLog("  URL: ${testCase.url}")
-        
-        val generatedSql = ragService.generateSQL(testCase.question, testCase.url, websites)
-        debugLog("  Generated SQL: ${generatedSql.replace("\n", " ")}")
-        
-        var rulesPassed = 0
-        testCase.rules.forEach { rule ->
-            val ok = rule.check(generatedSql)
-            if (ok) rulesPassed++
-            debugLog("    ${if (ok) "✓" else "✗"} ${rule.name}")
+        try {
+            val generatedSql = ragService.generateSQL(testCase.question, testCase.url, websites)
+            debugLog("  Generated SQL: ${generatedSql.replace("\n", " ")}")
+
+            var rulesPassed = 0
+            testCase.rules.forEach { rule ->
+                val ok = rule.check(generatedSql)
+                if (ok) rulesPassed++
+                debugLog("    ${if (ok) "✓" else "✗"} ${rule.name}")
+            }
+            val passed = rulesPassed == testCase.rules.size
+            if (passed) correctCount++
+            debugLog("  → ${if (passed) "PASS" else "FAIL"} ($rulesPassed/${testCase.rules.size} rules)")
+        } catch (e: Exception) {
+            debugLog("  → FAIL (${e.message})")
         }
-        val passed = rulesPassed == testCase.rules.size
-        if (passed) correctCount++
-        debugLog("  → ${if (passed) "PASS" else "FAIL"} ($rulesPassed/${testCase.rules.size} rules)")
     }
 
     correctCount.toDouble() / testCases.size
-}
+} }

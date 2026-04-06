@@ -5,6 +5,7 @@ import no.jamph.ragumami.core.llm.OllamaClient
 import no.jamph.ragumami.Routes
 import no.jamph.ragumami.umami.UmamiRAGService
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.supervisorScope
 
 private const val AKSEL_Website_Id = "fb69e1e9-1bd3-4fd9-b700-9d035cbf44e1"
 
@@ -15,7 +16,7 @@ fun DialectValidetaLlmToSql(
     },
     debugLog: (String) -> Unit = ::println
 ): Double {
-    return runBlocking {
+    return runBlocking { supervisorScope {
         val schemaService = BigQuerySchemaServiceMock()
         val websites = schemaService.getWebsites()
         
@@ -110,14 +111,18 @@ fun DialectValidetaLlmToSql(
             group.queries.forEach { query ->
                 globalIndex++
                 debugLog("  Dialect test $globalIndex/${allQueries.size}: ${query.take(50)}...")
-                val generatedSql = ragService.generateSQL(query, url, websites)
-                debugLog("  Generated SQL: ${generatedSql.replace("\n", " ")}")
-                val passed = group.validate(generatedSql)
-                if (passed) validCount++
-                debugLog("  → ${if (passed) "PASS ✓" else "FAIL ✗"}")
+                try {
+                    val generatedSql = ragService.generateSQL(query, url, websites)
+                    debugLog("  Generated SQL: ${generatedSql.replace("\n", " ")}")
+                    val passed = group.validate(generatedSql)
+                    if (passed) validCount++
+                    debugLog("  → ${if (passed) "PASS ✓" else "FAIL ✗"}")
+                } catch (e: Exception) {
+                    debugLog("  → FAIL ✗ (${e.message})")
+                }
             }
         }
 
         validCount.toDouble() / allQueries.size
-    }
+    } }
 }
