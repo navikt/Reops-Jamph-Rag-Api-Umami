@@ -2,5 +2,5 @@
   "frontendUrl":  "https://jamph.ekstern.dev.nav.no",
   "ragApiUrl":    "https://jamph-rag-api-umami.ekstern.dev.nav.no",
   "ollamaUrl":    "https://jamph-ollama.ekstern.dev.nav.no",
-  "defaultModel": "mistral:7b"
+  "defaultModel": "phi4-mini"
 }
