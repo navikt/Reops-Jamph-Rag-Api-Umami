@@ -382,13 +382,13 @@ fun Application.configureRouting() {
                             return@launch
                         }
                         
-                        val skipSqlAccuracyTest = true
-                        val skipDialectAccuracyTest = true
+                        val skipSqlAccuracyTest = false
+                        val skipDialectAccuracyTest = false
                         val skipTokenSpeedTest = false
-                        val skipEndToEndTest = true
-                        val skipLongPromptTest = true
-                        val skipShortPromptTest = true
-                        val skipCostEstimateTest = true
+                        val skipEndToEndTest = false
+                        val skipLongPromptTest = false
+                        val skipShortPromptTest = false
+                        val skipCostEstimateTest = false
 
                         // Step 4: SQL accuracy test
                         emitEvent("debug", "--- Starting SQL accuracy test ---")
