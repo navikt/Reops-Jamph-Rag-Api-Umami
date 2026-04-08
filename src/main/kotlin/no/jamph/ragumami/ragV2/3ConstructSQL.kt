@@ -3,30 +3,13 @@ package no.jamph.ragumami.ragV2
 import com.google.gson.JsonObject
 import org.slf4j.LoggerFactory
 
-/**
- * Constructs executable SQL by replacing variable placeholders in templates.
- * 
- * This is Step 3 of the RAG v2 pipeline. It takes the SQL template with [VARIABLE_NAME]
- * placeholders and replaces them with actual values extracted in Step 2.
- */
+
 class SqlConstructor(
     private val prebuiltSchemas: PrebuiltSchemaProvider
 ) {
     private val logger = LoggerFactory.getLogger(SqlConstructor::class.java)
     
-    /**
-     * Constructs the final SQL query by replacing variable placeholders.
-     * 
-     * Variable placeholders in the SQL template should be in the format: [VARIABLE_NAME]
-     * These are replaced with corresponding values from the variables JSON object.
-     * 
-     * @param queryType The classified query type (used to fetch the SQL template)
-     * @param variables JSON object containing variable names and their values
-     * @param siteId Website ID to inject (predetermined variable)
-     * @param urlPath URL path to inject (predetermined variable)
-     * @return The complete SQL query with all variables replaced
-     * @throws IllegalStateException if required variables are missing or replacement fails
-     */
+
     fun constructSql(
         queryType: String,
         variables: JsonObject,
@@ -45,10 +28,7 @@ class SqlConstructor(
         return sql
     }
     
-    /**
-     * Injects predetermined variables that are always available.
-     * These come from the request context, not from the LLM extraction.
-     */
+
     private fun injectPredeterminedVariables(
         sql: String,
         siteId: String,
@@ -64,10 +44,6 @@ class SqlConstructor(
         return result
     }
     
-    /**
-     * Replaces variables from the extracted JSON object.
-     * Handles different data types (strings, numbers, booleans).
-     */
     private fun replaceVariablesFromJson(
         sql: String,
         variables: JsonObject
@@ -106,12 +82,7 @@ class SqlConstructor(
         return result
     }
     
-    /**
-     * Validates that all required variable placeholders have been replaced.
-     * Can be called by consumers if strict validation is needed.
-     * 
-     * @return List of missing variable names (empty if all replaced)
-     */
+
     fun validateNoMissingVariables(sql: String): List<String> {
         return Regex("\\[([A-Z_]+)\\]")
             .findAll(sql)

@@ -7,14 +7,7 @@ import com.google.gson.JsonParser
 import com.google.gson.JsonSyntaxException
 import org.slf4j.LoggerFactory
 
-/**
- * Result of variable extraction.
- * 
- * @property variables JSON object containing extracted variable values
- * @property siteId The website ID (passed through from Step 1)
- * @property urlPath The URL path (passed through from Step 1)
- * @property userPrompt The original prompt (passed through from Step 1)
- */
+
 data class ExtractedVariables(
     val variables: JsonObject,
     val siteId: String,
@@ -22,12 +15,6 @@ data class ExtractedVariables(
     val userPrompt: String
 )
 
-/**
- * Extracts variable values from natural language using LLM and prebuilt schemas.
- * 
- * This is Step 2 of the RAG v2 pipeline. It takes a classified query type and uses
- * the LLM to fill in the variable placeholders needed for the SQL template.
- */
 class VariableExtractor(
     private val ollamaClient: OllamaClient,
     private val prebuiltSchemas: PrebuiltSchemaProvider
@@ -39,16 +26,7 @@ class VariableExtractor(
         private const val MAX_RETRIES = 3
     }
     
-    /**
-     * Extracts variables from the user's prompt using LLM.
-     * 
-     * @param queryType The classified query type from Step 1
-     * @param siteId The website ID from Step 1
-     * @param urlPath The URL path from Step 1
-     * @param userPrompt The original user question from Step 1
-     * @return ExtractedVariables containing the JSON with variable values and context
-     * @throws IllegalStateException if variable extraction fails after MAX_RETRIES attempts
-     */
+
     suspend fun extractVariables(
         queryType: String,
         siteId: String,
@@ -98,10 +76,7 @@ class VariableExtractor(
         )
     }
     
-    /**
-     * Builds the LLM prompt for variable extraction.
-     * Uses progressively stricter prompts on retry attempts.
-     */
+
     private fun buildExtractionPrompt(
         userPrompt: String,
         bigQuerySchema: String,
@@ -146,12 +121,7 @@ class VariableExtractor(
         }
     }
     
-    /**
-     * Parses the LLM response and validates it as JSON.
-     * Handles markdown code blocks and other formatting issues.
-     * 
-     * @return JsonObject if valid, null otherwise
-     */
+
     private fun parseAndValidateJson(response: String, expectedSchema: String): JsonObject? {
         try {
             val jsonText = extractJsonFromResponse(response)
@@ -179,10 +149,7 @@ class VariableExtractor(
             return null
         }
     }
-    
-    /**
-     * Extracts JSON from various response formats (with or without markdown code blocks).
-     */
+
     private fun extractJsonFromResponse(response: String): String {
         val trimmed = response.trim()
         
@@ -192,8 +159,7 @@ class VariableExtractor(
         if (match != null) {
             return match.groupValues[1].trim()
         }
-        
-        // If no code block, try to find JSON object boundaries
+
         val startIndex = trimmed.indexOf('{')
         val endIndex = trimmed.lastIndexOf('}')
         
@@ -201,7 +167,7 @@ class VariableExtractor(
             return trimmed.substring(startIndex, endIndex + 1)
         }
         
-        // Return as-is if no pattern matches
+
         return trimmed
     }
 }

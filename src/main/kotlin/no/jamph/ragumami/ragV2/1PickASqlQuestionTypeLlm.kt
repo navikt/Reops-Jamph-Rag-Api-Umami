@@ -5,14 +5,6 @@ import no.jamph.bigquery.BigQuerySchemaProvider
 import no.jamph.bigquery.urlToSiteIdAndPath
 import org.slf4j.LoggerFactory
 
-/**
- * Result of query type classification.
- * 
- * @property queryType The classified SQL query type (e.g., "default", "linear", "pageviews", etc.)
- * @property siteId The website ID from BigQuery 
- * @property urlPath The formatted URL path for SQL LIKE queries
- * @property userPrompt The original user prompt
- */
 data class QueryTypeResult(
     val queryType: String,
     val siteId: String,
@@ -20,12 +12,7 @@ data class QueryTypeResult(
     val userPrompt: String
 )
 
-/**
- * Classifies natural language queries into predefined SQL query types.
- * 
- * This is Step 1 of the RAG v2 pipeline. It analyzes the user's prompt and determines
- * which type of prebuilt SQL template should be used.
- */
+
 class QueryTypeClassifier(
     private val ollamaClient: OllamaClient,
     private val bigQueryService: BigQuerySchemaProvider
@@ -50,16 +37,7 @@ class QueryTypeClassifier(
         )
     }
     
-    /**
-     * Classifies the query type and extracts URL information.
-     * 
-     * @param userPrompt The natural language question from the user
-     * @param url The full URL (e.g., "https://aksel.nav.no/designsystemet")
-     * @param pathOperator "starts-with" (default) or "equals" for URL path matching
-     * @return QueryTypeResult containing the classified type and extracted context
-     * @throws IllegalStateException if classification fails after MAX_RETRIES attempts
-     * @throws IllegalArgumentException if URL parsing fails
-     */
+
     suspend fun classifyQueryType(
         userPrompt: String,
         url: String,
@@ -105,10 +83,7 @@ class QueryTypeClassifier(
         )
     }
     
-    /**
-     * Builds the LLM prompt for query classification.
-     * Uses progressively stricter prompts on retry attempts.
-     */
+
     private fun buildClassificationPrompt(userPrompt: String, attempt: Int): String {
         return if (attempt == 1) {
             """
@@ -151,10 +126,7 @@ class QueryTypeClassifier(
         }
     }
     
-    /**
-     * Extracts a valid query type from the LLM response.
-     * Handles various response formats (with/without quotes, extra whitespace, etc.)
-     */
+
     private fun extractQueryType(response: String): String? {
         val cleaned = response.trim()
             .lowercase()
@@ -162,13 +134,12 @@ class QueryTypeClassifier(
             .replace("'", "")
             .replace(":", "")
             .trim()
-        
-        // Try direct match first
+
         if (cleaned in VALID_QUERY_TYPES) {
             return cleaned
         }
         
-        // Try finding any valid type within the response
+
         return VALID_QUERY_TYPES.find { type -> cleaned.contains(type) }
     }
 }

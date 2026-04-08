@@ -4,23 +4,7 @@ import no.jamph.ragumami.core.llm.OllamaClient
 import no.jamph.bigquery.BigQuerySchemaProvider
 import org.slf4j.LoggerFactory
 
-/**
- * Main orchestrator for the RAG v2 SQL generation pipeline.
- * 
- * This service coordinates the three-step process:
- * 1. QueryTypeClassifier - Classify the query type
- * 2. VariableExtractor - Extract variables from natural language
- * 3. SqlConstructor - Build the final SQL query
- * 
- * Usage example:
- * ```kotlin
- * val ragV2Service = RagV2SqlService(ollamaClient, bigQueryService)
- * val sql = ragV2Service.generateSql(
- *     userPrompt = "Show me pageviews per day in 2025",
- *     url = "https://aksel.nav.no"
- * )
- * ```
- */
+
 class RagV2SqlService(
     private val ollamaClient: OllamaClient,
     private val bigQueryService: BigQuerySchemaProvider
@@ -33,19 +17,7 @@ class RagV2SqlService(
     private val variableExtractor = VariableExtractor(ollamaClient, schemaProvider)
     private val sqlConstructor = SqlConstructor(schemaProvider)
     
-    /**
-     * Generates a SQL query from a natural language prompt.
-     * 
-     * This is the main entry point for the RAG v2 pipeline. It orchestrates
-     * all three steps: classification, variable extraction, and SQL construction.
-     * 
-     * @param userPrompt The natural language question from the user
-     * @param url The full URL (e.g., "https://aksel.nav.no/designsystemet")
-     * @param pathOperator "starts-with" (default) or "equals" for URL path matching
-     * @return The generated SQL query ready for execution
-     * @throws IllegalStateException if any step fails after retries
-     * @throws IllegalArgumentException if URL parsing fails
-     */
+
     suspend fun generateSql(
         userPrompt: String,
         url: String,
@@ -91,10 +63,7 @@ class RagV2SqlService(
         }
     }
     
-    /**
-     * Generates SQL and returns detailed debug information about each step.
-     * Useful for debugging and understanding how the pipeline made decisions.
-     */
+
     suspend fun generateSqlWithDebugInfo(
         userPrompt: String,
         url: String,
@@ -124,9 +93,6 @@ class RagV2SqlService(
     }
 }
 
-/**
- * Result object containing the SQL and debug information.
- */
 data class SqlGenerationResult(
     val sql: String,
     val queryType: String,
