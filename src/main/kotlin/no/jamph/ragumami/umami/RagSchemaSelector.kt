@@ -10,12 +10,11 @@ object RagSchemaSelector {
         for (attempt in 0 until maxRetries) {
             val prompt = if (attempt == 0) {
                 """
-                Output only one word: {default, linear, actions}
+                Output only one word: {default, linear}
                 
                 What is the context of the question:
-                - default: Almost all requests Default for ALL counting, aggregating, grouping queries. Examples: "count per day", "views by month", "total users", "how many X", "top pages". Anything that is easy for an llm to create SQL for.
-                - linear: ONLY For explicit TREND/REGRESSION analysis. Examples: "is traffic INCREASING", "what's the GROWTH RATE", "regression analysis", "is there an UPWARD trend"
-                - actions: ONLY For specific click/interaction events. Examples: "button clicks", "accordion opens", "form submissions"
+                - default: Almost all requests. Default for ALL counting, aggregating, grouping queries. Examples: "count per day", "views by month", "total users", "how many X", "top pages". Anything that is easy for an llm to create SQL for.
+                - linear: ONLY For explicit TREND/REGRESSION analysis. Examples: "Hvordan endrer trafikken seg","gjør en trendanalyse"
                                 
                 Question: $question
                 
@@ -26,7 +25,6 @@ object RagSchemaSelector {
                 OUTPUT EXACTLY ONE OF THESE WORDS:
                 default
                 linear
-                actions
                 
                 NO explanations. NO quotes. NO punctuation. NO symbols. NO other text.
                 Just the word itself.
@@ -45,7 +43,6 @@ object RagSchemaSelector {
             if (extracted != null) {
                 return when (extracted) {
                     "linear" -> LINEAR_ADDITION
-                    "actions" -> ACTIONS_ADDITION
                     "default" -> DEFAULT_ADDITION
                     else -> throw IllegalStateException("Unexpected schema option: $extracted")
                 }
@@ -132,12 +129,5 @@ FROM pv
 ORDER BY term
 
 Replace [START_DATE], [TABLE_NAME], [WEBSITE_ID], and [ADD_FILTERS_HERE] with actual values.
-"""
-    
-    private const val ACTIONS_ADDITION = """
-- Click events stored in event_name column
-- Accordion: event_name LIKE '%accordion%'
-- Buttons: event_name LIKE '%button%' OR event_name LIKE '%click%'
-- Actions require filtering by event_type where appropriate
 """
 }
