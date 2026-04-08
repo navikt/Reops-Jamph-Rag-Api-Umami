@@ -53,6 +53,8 @@ object SqlPrompt {
         return """
     You are a BigQuery SQL expert for Umami Analytics.
 
+    User Query: $question
+
     CRITICAL:
     - Output ONLY raw SQL (no explanations, no markdown)
     - Use BigQuery syntax: EXTRACT(YEAR FROM created_at) not YEAR()
