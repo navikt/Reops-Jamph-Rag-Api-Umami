@@ -172,10 +172,68 @@ Columns:
     )
     
     private fun rankingsSchema(schemaProvider: BigQuerySchemaProvider) = SchemaTriple(
-        bigQuerySchema = """**bigquery schema**""".trimIndent(),
-        simplifiedSql = """**sql for llm**""".trimIndent(),
-        sqlTemplate = """**sql template**""".trimIndent(),
-        jsonSchema = """**json schema**""".trimIndent()
+        bigQuerySchema = """
+            Table: `event`
+              - website_id (STRING, NULLABLE)
+              - url_path (STRING, NULLABLE)      -- the page URL path, e.g. '/artikkel/tilgjengelighet'
+              - page_title (STRING, NULLABLE)    -- human-readable page title
+              - event_type (INT64, NULLABLE)     -- 1 = page view, 2 = custom event
+              - created_at (TIMESTAMP, NULLABLE)
+
+            Table: `session`
+              - website_id (STRING, NULLABLE)
+              - browser (STRING, NULLABLE)       -- e.g. 'Chrome', 'Firefox'
+              - os (STRING, NULLABLE)            -- e.g. 'Windows', 'iOS', 'Android'
+              - device (STRING, NULLABLE)        -- e.g. 'desktop', 'mobile', 'tablet'
+              - screen (STRING, NULLABLE)        -- screen resolution, e.g. '1920x1080'
+              - language (STRING, NULLABLE)      -- e.g. 'nb-NO', 'en-US'
+              - country (STRING, NULLABLE)       -- e.g. 'NO', 'SE'
+              - created_at (TIMESTAMP, NULLABLE)
+        """.trimIndent(),
+
+        simplifiedSql = """
+            -- Example: top pages by views
+            SELECT url_path, page_title, COUNT(*) AS count
+            FROM event
+            WHERE event_type = 1
+                AND created_at >= '[START_DATE]'
+                AND created_at < '[END_DATE]'
+            GROUP BY url_path, page_title
+            ORDER BY count DESC
+            LIMIT [LIMIT]
+
+            -- Example: top OS / browser / device / country (use session table instead)
+            SELECT os, COUNT(*) AS count
+            FROM session
+            WHERE website_id = '[SITE_ID]'
+                AND created_at >= '[START_DATE]'
+                AND created_at < '[END_DATE]'
+            GROUP BY os
+            ORDER BY count DESC
+            LIMIT [LIMIT]
+        """.trimIndent(),
+
+        sqlTemplate = """
+            SELECT [RANK_COLUMN], COUNT(*) AS count
+            FROM [TABLE_NAME]
+            WHERE website_id = '[SITE_ID]'
+                [EXTRA_FILTER]
+                AND created_at >= TIMESTAMP('[START_DATE]')
+                AND created_at < TIMESTAMP('[END_DATE]')
+            GROUP BY [RANK_COLUMN]
+            ORDER BY count DESC
+            LIMIT [LIMIT]
+        """.trimIndent(),
+        jsonSchema = """
+            {
+              "TABLE_NAME": [TABLE_NAME],
+              "RANK_COLUMN": [RANK_COLUMN],
+              "EXTRA_FILTER": [EXTRA_FILTER],
+              "START_DATE": [START_DATE],
+              "END_DATE": [END_DATE],
+              "LIMIT": [LIMIT]
+            }
+        """.trimIndent()
     )
     
     private fun defaultSchema(schemaProvider: BigQuerySchemaProvider) = SchemaTriple(
@@ -210,7 +268,7 @@ Columns:
         // The SQL that gets run against BigQuery
         sqlTemplate = """
             SELECT COUNT(*) AS total_searches
-            FROM `fagtorsdag-prod-81a6.umami_student.event` e
+            FROM [TABLE_EVENT]
             JOIN `fagtorsdag-prod-81a6.umami_student.event_data` ed ON e.event_id = ed.website_event_id
             CROSS JOIN UNNEST(ed.event_parameters) AS p
             WHERE e.website_id = '[SITE_ID]'
