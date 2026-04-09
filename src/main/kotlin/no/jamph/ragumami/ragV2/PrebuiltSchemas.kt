@@ -258,7 +258,7 @@ Columns:
         // The SQL that gets run against BigQuery
         sqlTemplate = """
             SELECT COUNT(*) AS total_searches
-            FROM `fagtorsdag-prod-81a6.umami_student.event_data`
+            FROM `fagtorsdag-prod-81a6.umami_student.event` e
             JOIN `fagtorsdag-prod-81a6.umami_student.event_data` ed ON e.event_id = ed.website_event_id
             CROSS JOIN UNNEST(ed.event_parameters) AS p
             WHERE e.website_id = '[SITE_ID]'
