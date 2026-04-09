@@ -3,6 +3,8 @@ package no.jamph.ragumami.ragV2
 import no.jamph.ragumami.core.llm.OllamaClient
 import no.jamph.bigquery.BigQuerySchemaProvider
 import no.jamph.bigquery.urlToSiteIdAndPath
+import com.google.gson.JsonParser
+import com.google.gson.JsonSyntaxException
 
 data class QueryTypeResult(
     val queryType: String,
@@ -42,10 +44,10 @@ class PickASqlQuestionTypeLlm(
             val response = ollamaClient.generateConstrained(
                 prompt = buildClassificationPrompt(userPrompt),
                 temperature = 0.0,
-                maxTokens = 20
+                maxTokens = 500
             )
             if (captureDebugInfo) rawResponse = response
-            extractQueryType(response)
+            extractQueryTypeFromJson(response)
         }
         
         return QueryTypeResult(
@@ -67,23 +69,47 @@ class PickASqlQuestionTypeLlm(
         - search: ONLY For queries asking how many users searched for a SPECIFIC term. Examples: "hvor mange søker på accessibility", "hvor mange søker etter universell utforming", "søkeantall for ki"
         - default: Everything else. This can handle a wide variety of questions.
         - journey: ONLY For queries that ask about user journeys or sequences of page visits. Examples: "hvor mange går fra startsiden til produktsiden", "brukerreise fra blogg til kontakt oss", "hvor mange går fra A til B"
+        
         User question: $userPrompt
         
-        Output ONLY one word: linear, rankings, search, journey, or default. Do NOT return any explanations or additional text. No symbols.
+        Return ONLY valid JSON with this structure:
+        {
+          "queryType": "one of: linear, rankings, search, default, journey",
+        }
+        
+        Return ONLY the JSON object. No markdown, no code blocks, no additional text.
     """.trimIndent()
     
 
-    private fun extractQueryType(response: String): String {
-        val cleaned = response.trim().lowercase()
-            .replace("\"", "")
-            .replace("'", "")
-            .replace(":", "")
+    private fun extractQueryTypeFromJson(response: String): String {
+        val cleaned = response.trim()
+            .removePrefix("```json")
+            .removePrefix("```")
+            .removeSuffix("```")
             .trim()
         
-        return if (cleaned in VALID_QUERY_TYPES) {
-            cleaned
-        } else {
-            VALID_QUERY_TYPES.find { cleaned.contains(it) } ?: "default"
+        return try {
+            val jsonObject = JsonParser.parseString(cleaned).asJsonObject
+            val queryType = jsonObject.get("queryType")?.asString?.lowercase()?.trim() ?: "default"
+            
+            if (queryType in VALID_QUERY_TYPES) {
+                queryType
+            } else {
+                VALID_QUERY_TYPES.find { queryType.contains(it) } ?: "default"
+            }
+        } catch (e: JsonSyntaxException) {
+            // Fallback: try old extraction method
+            val fallback = cleaned.lowercase()
+                .replace("\"", "")
+                .replace("'", "")
+                .replace(":", "")
+                .trim()
+            
+            if (fallback in VALID_QUERY_TYPES) {
+                fallback
+            } else {
+                VALID_QUERY_TYPES.find { fallback.contains(it) } ?: "default"
+            }
         }
     }
 }
