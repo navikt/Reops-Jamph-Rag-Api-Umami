@@ -245,4 +245,11 @@ Columns:
             }
         """.trimIndent()
     )
+
+        private fun journeySchema(schemaProvider: BigQuerySchemaProvider) = SchemaTriple(
+        bigQuerySchema = """${schemaProvider}""".trimIndent(),
+        simplifiedSql = """Write your own SQLwith Bigquery dialect here""".trimIndent(),
+        sqlTemplate = """N/A""".trimIndent(),
+        jsonSchema = """RETURN SQL""".trimIndent()
+    )
 }

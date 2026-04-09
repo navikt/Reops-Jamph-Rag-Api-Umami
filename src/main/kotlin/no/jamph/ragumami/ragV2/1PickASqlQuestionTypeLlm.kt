@@ -22,7 +22,8 @@ class PickASqlQuestionTypeLlm(
             "linear",
             "rankings",
             "search",
-            "default"
+            "default",
+            "journey"
         )
     }
     
@@ -38,23 +39,13 @@ class PickASqlQuestionTypeLlm(
         
         var rawResponse: String? = null
         val extractedType = tryCatchRetry(3, "Error 10000") {
-            try {
-                val response = ollamaClient.generateConstrained(
-                    prompt = buildClassificationPrompt(userPrompt),
-                    temperature = 0.0,
-                    maxTokens = 20
-                )
-                if (captureDebugInfo) rawResponse = response
-                val result = extractQueryType(response)
-                if (result == "default" && !response.trim().lowercase().contains("default")) {
-                    rawResponse = response
-                    throw IllegalStateException("LLM returned unclear response: '$response'")
-                }
-                result
-            } catch (e: Exception) {
-                rawResponse = rawResponse ?: "Error occurred before LLM response"
-                throw IllegalStateException("Raw LLM response: '$rawResponse'", e)
-            }
+            val response = ollamaClient.generateConstrained(
+                prompt = buildClassificationPrompt(userPrompt),
+                temperature = 0.0,
+                maxTokens = 20
+            )
+            if (captureDebugInfo) rawResponse = response
+            extractQueryType(response)
         }
         
         return QueryTypeResult(
@@ -75,10 +66,10 @@ class PickASqlQuestionTypeLlm(
         - rankings: ONLY For queries that ask for top/bottom results. Examples: "top pages", "most visited pages", "least popular pages"
         - search: ONLY For queries asking how many users searched for a SPECIFIC term. Examples: "hvor mange søker på accessibility", "hvor mange søker etter universell utforming", "søkeantall for ki"
         - default: Everything else. This can handle a wide variety of questions.
-        
+        - journey: ONLY For queries that ask about user journeys or sequences of page visits. Examples: "hvor mange går fra startsiden til produktsiden", "brukerreise fra blogg til kontakt oss", "hvor mange går fra A til B"
         User question: $userPrompt
         
-        Output ONLY the query type (one word):
+        Output ONLY one word: linear, rankings, search, journey, or default. Do NOT return any explanations or additional text. No symbols.
     """.trimIndent()
     
 
