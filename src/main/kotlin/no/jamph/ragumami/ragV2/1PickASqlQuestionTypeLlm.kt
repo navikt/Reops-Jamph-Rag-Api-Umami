@@ -40,36 +40,42 @@ class PickASqlQuestionTypeLlm(
         val parsedUrl = urlToSiteIdAndPath(url, websites, pathOperator)
         
         var rawResponse: String? = null
-        val extractedType = try {
-            tryCatchRetry(3, "Error 10000") {
+        var lastException: Exception? = null
+        
+        // Retry up to 3 times
+        repeat(3) { attempt ->
+            try {
                 val response = ollamaClient.generateConstrained(
                     prompt = buildClassificationPrompt(userPrompt),
                     temperature = 0.0,
                     maxTokens = 500
                 )
                 rawResponse = response
-                if (captureDebugInfo) rawResponse = response
-                extractQueryTypeFromJson(response)
+                val extractedType = extractQueryTypeFromJson(response)
+                
+                return QueryTypeResult(
+                    queryType = extractedType,
+                    siteId = parsedUrl.siteId,
+                    urlPath = parsedUrl.urlPath,
+                    userPrompt = userPrompt,
+                    rawLlmResponse = if (captureDebugInfo) rawResponse else null
+                )
+            } catch (e: Exception) {
+                lastException = e
+                // Continue to next retry
             }
-        } catch (e: Exception) {
-            val llmOutput = rawResponse?.take(100) ?: "No response"
-            throw IllegalStateException("Error 10000 (Last LLM output: $llmOutput)", e)
         }
         
-        return QueryTypeResult(
-            queryType = extractedType,
-            siteId = parsedUrl.siteId,
-            urlPath = parsedUrl.urlPath,
-            userPrompt = userPrompt,
-            rawLlmResponse = if (captureDebugInfo) rawResponse else null
-        )
+        // All retries failed
+        val llmOutput = rawResponse?.take(10000) ?: "No response"
+        throw IllegalStateException("Error 10000 (Last LLM output: $llmOutput)", lastException)
     }
     
 
     private fun buildClassificationPrompt(userPrompt: String): String = """
-        You are a SQL query classifier. Analyze the user's question and determine which type of query template to use.
+        You are a classifier. Analyze the user's question and determine which template to use.
         
-        Available query types:
+        Available templates:
         - linear: ONLY For explicit TREND/REGRESSION analysis. Examples: "Hvordan endrer trafikken seg","gjør en trendanalyse"
         - rankings: ONLY For queries that ask for top/bottom results. Examples: "top pages", "most visited pages", "least popular pages"
         - search: ONLY For queries asking how many users searched for a SPECIFIC term. Examples: "hvor mange søker på accessibility", "hvor mange søker etter universell utforming", "søkeantall for ki"
