@@ -59,3 +59,9 @@ class OtherLlm(
         return null
     }
 }
+
+
+// Error Codes Reference:
+// 10002: SQL generation failed for default query type after 3 retry attempts.
+//        Possible causes: LLM returned invalid SQL, no SELECT statement found, or malformed response.
+//        Resolution: Check LLM service availability, review schema context, or simplify user prompt.

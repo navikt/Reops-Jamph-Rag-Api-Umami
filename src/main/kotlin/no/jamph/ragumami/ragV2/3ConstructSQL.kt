@@ -72,3 +72,9 @@ class ConstructSQL(
             .toList()
     }
 }
+
+
+// Error Codes Reference:
+// 10003: SQL template construction failed. Variable replacement or template processing error.
+//        Possible causes: Missing required variables, invalid JSON structure, or template mismatch.
+//        Resolution: Verify extracted variables match template placeholders, check JSON schema validity.

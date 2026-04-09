@@ -8,7 +8,8 @@ data class QueryTypeResult(
     val queryType: String,
     val siteId: String,
     val urlPath: String,
-    val userPrompt: String
+    val userPrompt: String,
+    val rawLlmResponse: String? = null
 )
 
 
@@ -29,17 +30,20 @@ class PickASqlQuestionTypeLlm(
     suspend fun classifyQueryType(
         userPrompt: String,
         url: String,
-        pathOperator: String = "starts-with"
+        pathOperator: String = "starts-with",
+        captureDebugInfo: Boolean = false
     ): QueryTypeResult {
         val websites = bigQueryService.getWebsites()
         val parsedUrl = urlToSiteIdAndPath(url, websites, pathOperator)
         
+        var rawResponse: String? = null
         val extractedType = tryCatchRetry(3, "Query classification failed") {
             val response = ollamaClient.generateConstrained(
                 prompt = buildClassificationPrompt(userPrompt),
                 temperature = 0.0,
                 maxTokens = 20
             )
+            if (captureDebugInfo) rawResponse = response
             extractQueryType(response)
         }
         
@@ -47,7 +51,8 @@ class PickASqlQuestionTypeLlm(
             queryType = extractedType,
             siteId = parsedUrl.siteId,
             urlPath = parsedUrl.urlPath,
-            userPrompt = userPrompt
+            userPrompt = userPrompt,
+            rawLlmResponse = if (captureDebugInfo) rawResponse else null
         )
     }
     
@@ -67,14 +72,24 @@ class PickASqlQuestionTypeLlm(
     """.trimIndent()
     
 
-    private fun extractQueryType(response: String): String? {
+    private fun extractQueryType(response: String): String {
         val cleaned = response.trim().lowercase()
             .replace("\"", "")
             .replace("'", "")
             .replace(":", "")
             .trim()
         
-        return if (cleaned in VALID_QUERY_TYPES) cleaned
-        else VALID_QUERY_TYPES.find { cleaned.contains(it) }
+        return if (cleaned in VALID_QUERY_TYPES) {
+            cleaned
+        } else {
+            VALID_QUERY_TYPES.find { cleaned.contains(it) } ?: "default"
+        }
     }
 }
+
+
+// Error Codes Reference:
+// 10000: Query classification failed after 3 retry attempts. The LLM could not determine the correct query type.
+//        Possible causes: LLM returned invalid response, timeout, or model unavailable.
+//        Resolution: Check LLM service status, review prompt clarity, or increase retry attempts.
+ 

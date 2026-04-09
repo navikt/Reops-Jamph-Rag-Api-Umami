@@ -104,3 +104,9 @@ class PickVariableJsonLlm(
         return trimmed
     }
 }
+
+
+// Error Codes Reference:
+// 10001: Variable extraction failed after 3 retry attempts. The LLM could not extract valid JSON variables.
+//        Possible causes: LLM returned malformed JSON, missing required fields, or invalid format.
+//        Resolution: Check LLM response format, review JSON schema clarity, or adjust extraction prompt.

@@ -53,27 +53,50 @@ class RagV2SqlService(
         url: String,
         pathOperator: String = "starts-with"
     ): SqlGenerationResult {
-        val classificationResult = queryTypeClassifier.classifyQueryType(userPrompt, url, pathOperator)
-        val extractedVariables = variableExtractor.extractVariables(
-            classificationResult.queryType,
-            classificationResult.siteId,
-            classificationResult.urlPath,
-            classificationResult.userPrompt
-        )
-        val sql = sqlConstructor.constructSql(
-            classificationResult.queryType,
-            extractedVariables.variables,
-            extractedVariables.siteId,
-            extractedVariables.urlPath
+        val classificationResult = queryTypeClassifier.classifyQueryType(
+            userPrompt = userPrompt,
+            url = url,
+            pathOperator = pathOperator,
+            captureDebugInfo = true
         )
         
-        return SqlGenerationResult(
-            sql = sql,
-            queryType = classificationResult.queryType,
-            siteId = classificationResult.siteId,
-            urlPath = classificationResult.urlPath,
-            extractedVariables = extractedVariables.variables.toString()
-        )
+        return if (classificationResult.queryType == "default") {
+            val sql = otherLlm.generateSql(
+                userPrompt = classificationResult.userPrompt,
+                siteId = classificationResult.siteId,
+                urlPath = classificationResult.urlPath
+            )
+            SqlGenerationResult(
+                sql = sql,
+                queryType = classificationResult.queryType,
+                siteId = classificationResult.siteId,
+                urlPath = classificationResult.urlPath,
+                extractedVariables = null,
+                rawClassificationResponse = classificationResult.rawLlmResponse
+            )
+        } else {
+            val extractedVariables = variableExtractor.extractVariables(
+                queryType = classificationResult.queryType,
+                siteId = classificationResult.siteId,
+                urlPath = classificationResult.urlPath,
+                userPrompt = classificationResult.userPrompt
+            )
+            val sql = sqlConstructor.constructSql(
+                queryType = classificationResult.queryType,
+                variables = extractedVariables.variables,
+                siteId = extractedVariables.siteId,
+                urlPath = extractedVariables.urlPath
+            )
+            
+            SqlGenerationResult(
+                sql = sql,
+                queryType = classificationResult.queryType,
+                siteId = classificationResult.siteId,
+                urlPath = classificationResult.urlPath,
+                extractedVariables = extractedVariables.variables.toString(),
+                rawClassificationResponse = classificationResult.rawLlmResponse
+            )
+        }
     }
 }
 
@@ -82,5 +105,6 @@ data class SqlGenerationResult(
     val queryType: String,
     val siteId: String,
     val urlPath: String,
-    val extractedVariables: String
+    val extractedVariables: String?,
+    val rawClassificationResponse: String? = null
 )

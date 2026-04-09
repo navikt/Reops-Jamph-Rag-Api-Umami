@@ -271,12 +271,30 @@ fun Application.configureRouting() {
                     ragV2Service
                 }
                 
-                val sql = serviceToUse.generateSql(
-                    userPrompt = request.query,
-                    url = request.url,
-                    pathOperator = request.pathOperator ?: "starts-with"
-                )
-                call.respond(SQLResponse(sql))
+                if (request.debug == true) {
+                    val result = serviceToUse.generateSqlWithDebugInfo(
+                        userPrompt = request.query,
+                        url = request.url,
+                        pathOperator = request.pathOperator ?: "starts-with"
+                    )
+                    call.respond(SQLResponse(
+                        sql = result.sql,
+                        debugInfo = mapOf(
+                            "queryType" to result.queryType,
+                            "siteId" to result.siteId,
+                            "urlPath" to result.urlPath,
+                            "extractedVariables" to result.extractedVariables,
+                            "rawClassificationResponse" to result.rawClassificationResponse
+                        )
+                    ))
+                } else {
+                    val sql = serviceToUse.generateSql(
+                        userPrompt = request.query,
+                        url = request.url,
+                        pathOperator = request.pathOperator ?: "starts-with"
+                    )
+                    call.respond(SQLResponse(sql))
+                }
             } catch (e: Exception) {
                 call.respond(
                     HttpStatusCode.InternalServerError,
@@ -509,7 +527,7 @@ fun Application.configureRouting() {
 
 data class ChatRequest(val message: String, val model: String? = null)
 data class ChatResponse(val response: String)
-data class SQLRequest(val query: String, val url: String? = null, val model: String? = null, val pathOperator: String? = null)
-data class SQLResponse(val sql: String)
+data class SQLRequest(val query: String, val url: String? = null, val model: String? = null, val pathOperator: String? = null, val debug: Boolean? = null)
+data class SQLResponse(val sql: String, val debugInfo: Map<String, String?>? = null)
 data class BenchmarkRequest(val model: String? = null, val ollamaBaseUrl: String? = null)
 data class ErrorResponse(val error: String)
