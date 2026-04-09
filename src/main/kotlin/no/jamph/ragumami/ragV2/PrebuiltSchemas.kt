@@ -17,6 +17,7 @@ object PrebuiltSchemas {
             when (type) {
                 "linear" -> linearSchema(schemaProvider!!)
                 "rankings" -> rankingsSchema(schemaProvider!!)
+                "search" -> searchSchema(schemaProvider!!)
                 else -> defaultSchema(schemaProvider!!)
             }
         }
@@ -185,4 +186,64 @@ Columns:
         jsonSchema = """RETURN SQL""".trimIndent()
     )
 
+    // For questions like "how many searched for X" / "hvor mange søker etter X"
+    // Finds search events (event_name='sok') and counts how many match the given term
+    
+    private fun searchSchema(schemaProvider: BigQuerySchemaProvider) = SchemaTriple(
+        // Only the tables and columns needed for this query
+        bigQuerySchema = """
+            Table: `event`
+              - event_id (STRING, REQUIRED)
+              - website_id (STRING, NULLABLE)
+              - session_id (STRING, NULLABLE)
+              - created_at (TIMESTAMP, NULLABLE)
+              - event_type (INT64, NULLABLE)  -- 2 = custom event
+              - event_name (STRING, NULLABLE) -- 'sok' = search
+
+            Table: `event_data`
+              - website_event_id (STRING, REQUIRED) -- join: event.event_id = event_data.website_event_id
+              - website_id (STRING, NULLABLE)
+              - event_parameters (ARRAY<STRUCT<data_key STRING, string_value STRING>>, REQUIRED)
+                CROSS JOIN UNNEST(event_parameters) AS p
+                p.data_key = 'query' → p.string_value is the search term typed by the user
+        """.trimIndent(),
+
+        // The SQL that gets run against BigQuery
+        sqlTemplate = """
+            SELECT COUNT(*) AS total_searches
+            FROM `fagtorsdag-prod-81a6.umami_student.event` e
+            JOIN `fagtorsdag-prod-81a6.umami_student.event_data` ed ON e.event_id = ed.website_event_id
+            CROSS JOIN UNNEST(ed.event_parameters) AS p
+            WHERE e.website_id = '[SITE_ID]'
+                AND e.event_type = 2
+                AND e.event_name = 'sok'
+                AND p.data_key = 'query'
+                AND LOWER(p.string_value) LIKE LOWER('%[SEARCH_TERM]%')
+                AND e.created_at >= TIMESTAMP('[START_DATE]')
+                AND e.created_at < TIMESTAMP('[END_DATE]')
+        """.trimIndent(),
+
+        // Shorter version shown to the LLM so it understands the shape
+        simplifiedSql = """
+            SELECT COUNT(*) AS total_searches
+            FROM event e
+            JOIN event_data ed ON e.event_id = ed.website_event_id
+            CROSS JOIN UNNEST(ed.event_parameters) AS p
+            WHERE e.event_type = 2
+                AND e.event_name = 'sok'
+                AND p.data_key = 'query'
+                AND LOWER(p.string_value) LIKE '%[SEARCH_TERM]%'
+                AND e.created_at >= '[START_DATE]'
+                AND e.created_at < '[END_DATE]'
+        """.trimIndent(),
+
+        // The LLM fills these in from the user's question
+        jsonSchema = """
+            {
+              "SEARCH_TERM": "word or phrase from the user's question",
+              "START_DATE": "YYYY-MM-DD",
+              "END_DATE": "YYYY-MM-DD"
+            }
+        """.trimIndent()
+    )
 }
