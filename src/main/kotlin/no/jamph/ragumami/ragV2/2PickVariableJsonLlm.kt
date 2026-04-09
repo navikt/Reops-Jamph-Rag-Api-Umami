@@ -24,11 +24,11 @@ class PickVariableJsonLlm(
         userPrompt: String
     ): ExtractedVariables {
         val bigQuerySchema = prebuiltSchemas.getBigQuerySchema(queryType)
-        val sqlTemplate = prebuiltSchemas.getSqlTemplate(queryType)
+        val simplifiedSql = prebuiltSchemas.getSimplifiedSql(queryType)
         val jsonSchema = prebuiltSchemas.getJsonSchema(queryType)
         
         val variables = tryCatchRetry(3, "Variable extraction failed") {
-            val extractionPrompt = buildExtractionPrompt(userPrompt, bigQuerySchema, sqlTemplate, jsonSchema)
+            val extractionPrompt = buildExtractionPrompt(userPrompt, bigQuerySchema, simplifiedSql, jsonSchema)
             val response = ollamaClient.generate(extractionPrompt)
             parseAndValidateJson(response)
         }
@@ -55,7 +55,7 @@ class PickVariableJsonLlm(
         $bigQuerySchema
         
         SQL Template:
-        $sqlTemplate
+        $simplifiedSql
         
         User Question: $userPrompt
         
