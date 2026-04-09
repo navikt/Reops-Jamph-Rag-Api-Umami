@@ -66,9 +66,13 @@ class PickASqlQuestionTypeLlm(
             }
         }
         
-        // All retries failed
-        val llmOutput = rawResponse?.take(10000) ?: "No response"
-        throw IllegalStateException("Error 10000 (Last LLM output: $llmOutput)", lastException)
+        // All retries failed - show either LLM response or exception message
+        val errorDetails = when {
+            rawResponse != null -> "Last LLM output: ${rawResponse.take(500)}"
+            lastException != null -> "Ollama error: ${lastException.message}"
+            else -> "No response from LLM"
+        }
+        throw IllegalStateException("Error 10000 ($errorDetails)", lastException)
     }
     
 
