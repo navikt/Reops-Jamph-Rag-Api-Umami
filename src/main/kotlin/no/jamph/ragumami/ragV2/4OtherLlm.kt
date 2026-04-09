@@ -14,7 +14,7 @@ class OtherLlm(
     ): String {
         val schema = schemaProvider.getSchemaContext()
         
-        return tryCatchRetry(3, "SQL generation failed") {
+        return tryCatchRetry(3, "Error 10002") {
             val prompt = buildPrompt(userPrompt, siteId, urlPath, schema)
             val response = ollamaClient.generate(prompt)
             extractSql(response)
@@ -62,6 +62,6 @@ class OtherLlm(
 
 
 // Error Codes Reference:
-// 10002: SQL generation failed for default query type after 3 retry attempts.
+// 10002: The model did not return valid SQL (no SELECT statement found).
 //        Possible causes: LLM returned invalid SQL, no SELECT statement found, or malformed response.
 //        Resolution: Check LLM service availability, review schema context, or simplify user prompt.

@@ -27,7 +27,7 @@ class PickVariableJsonLlm(
         val simplifiedSql = prebuiltSchemas.getSimplifiedSql(queryType)
         val jsonSchema = prebuiltSchemas.getJsonSchema(queryType)
         
-        val variables = tryCatchRetry(3, "Variable extraction failed") {
+        val variables = tryCatchRetry(3, "Error 10001") {
             val extractionPrompt = buildExtractionPrompt(userPrompt, bigQuerySchema, simplifiedSql, jsonSchema)
             val response = ollamaClient.generate(extractionPrompt)
             parseAndValidateJson(response)
@@ -107,6 +107,6 @@ class PickVariableJsonLlm(
 
 
 // Error Codes Reference:
-// 10001: Variable extraction failed after 3 retry attempts. The LLM could not extract valid JSON variables.
+// 10001: The model did not return valid JSON with extracted variables.
 //        Possible causes: LLM returned malformed JSON, missing required fields, or invalid format.
 //        Resolution: Check LLM response format, review JSON schema clarity, or adjust extraction prompt.

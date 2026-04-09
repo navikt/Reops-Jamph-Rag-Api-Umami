@@ -37,14 +37,24 @@ class PickASqlQuestionTypeLlm(
         val parsedUrl = urlToSiteIdAndPath(url, websites, pathOperator)
         
         var rawResponse: String? = null
-        val extractedType = tryCatchRetry(3, "Query classification failed") {
-            val response = ollamaClient.generateConstrained(
-                prompt = buildClassificationPrompt(userPrompt),
-                temperature = 0.0,
-                maxTokens = 20
-            )
-            if (captureDebugInfo) rawResponse = response
-            extractQueryType(response)
+        val extractedType = tryCatchRetry(3, "Error 10000") {
+            try {
+                val response = ollamaClient.generateConstrained(
+                    prompt = buildClassificationPrompt(userPrompt),
+                    temperature = 0.0,
+                    maxTokens = 20
+                )
+                if (captureDebugInfo) rawResponse = response
+                val result = extractQueryType(response)
+                if (result == "default" && !response.trim().lowercase().contains("default")) {
+                    rawResponse = response
+                    throw IllegalStateException("LLM returned unclear response: '$response'")
+                }
+                result
+            } catch (e: Exception) {
+                rawResponse = rawResponse ?: "Error occurred before LLM response"
+                throw IllegalStateException("Raw LLM response: '$rawResponse'", e)
+            }
         }
         
         return QueryTypeResult(
@@ -89,7 +99,7 @@ class PickASqlQuestionTypeLlm(
 
 
 // Error Codes Reference:
-// 10000: Query classification failed after 3 retry attempts. The LLM could not determine the correct query type.
-//        Possible causes: LLM returned invalid response, timeout, or model unavailable.
+// 10000: The model did not answer with a valid query type word (linear/rankings/search/default).
+//        Possible causes: LLM returned invalid response, unclear output, timeout, or model unavailable.
 //        Resolution: Check LLM service status, review prompt clarity, or increase retry attempts.
  
