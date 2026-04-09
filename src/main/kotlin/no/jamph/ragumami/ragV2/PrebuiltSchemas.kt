@@ -193,7 +193,7 @@ Columns:
 
         simplifiedSql = """
             SELECT [RANK_COLUMN], COUNT(*) AS count
-            FROM [TABLE_NAME]
+            FROM [TABLE]
             WHERE website_id = '[SITE_ID]'
                 [EXTRA_FILTER]
                 AND created_at >= '[START_DATE]'
@@ -205,7 +205,7 @@ Columns:
 
         sqlTemplate = """
             SELECT [RANK_COLUMN], COUNT(*) AS count
-            FROM [TABLE_NAME]
+            FROM [TABLE]
             WHERE website_id = '[SITE_ID]'
                 [EXTRA_FILTER]
                 AND created_at >= TIMESTAMP('[START_DATE]')
@@ -216,7 +216,7 @@ Columns:
         """.trimIndent(),
         jsonSchema = """
             {
-              "TABLE_NAME": [TABLE_NAME],
+              "TABLE_NAME": [TABLE],
               "RANK_COLUMN": [RANK_COLUMN],
               "EXTRA_FILTER": [EXTRA_FILTER],
               "START_DATE": [START_DATE],
@@ -258,7 +258,7 @@ Columns:
         // The SQL that gets run against BigQuery
         sqlTemplate = """
             SELECT COUNT(*) AS total_searches
-            FROM [TABLE_EVENT]
+            FROM `fagtorsdag-prod-81a6.umami_student.event_data`
             JOIN `fagtorsdag-prod-81a6.umami_student.event_data` ed ON e.event_id = ed.website_event_id
             CROSS JOIN UNNEST(ed.event_parameters) AS p
             WHERE e.website_id = '[SITE_ID]'
