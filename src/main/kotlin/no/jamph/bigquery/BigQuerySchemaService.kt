@@ -128,6 +128,9 @@ class BigQuerySchemaService(
                         "event_parameters" -> " - STRUCT fields: data_key STRING, string_value STRING, number_value FLOAT64, date_value TIMESTAMP, data_type INT64. Unnest with: CROSS JOIN UNNEST(event_parameters) AS p"
                         "referrer_domain" -> " - Origin domain of visitor"
                         "website_event_id" -> " - Foreign key to event.event_id"
+                        "browser" -> " - Known values: chrome, edge-chromium, firefox, ios, safari, crios, ios-webview, opera, facebook, samsung"
+                        "os" -> " - Known values: Mac OS, Windows 10, iOS, Android OS, Linux, Chrome OS"
+
                         else -> ""
                     }
                     schemaBuilder.appendLine("  - ${col.name} (${col.type}, ${col.mode})$desc$extraInfo")
