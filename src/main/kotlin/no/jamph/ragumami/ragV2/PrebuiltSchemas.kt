@@ -75,31 +75,34 @@ Columns:
         simplifiedSql = """
         For context only:
         WITH base AS (
-        SELECT
-        DATE_DIFF(DATE(created_at), DATE('[START_DATE]'), DAY) + 1 AS x,
-        COUNT(*) AS y
-        FROM [TABLE_NAME]
-        WHERE event_type = 1
-        AND DATE(created_at) BETWEEN DATE('[START_DATE]') AND DATE('[END_DATE]')
-        [ADD_FILTERS_HERE]
-        GROUP BY x
-        ),
-        Do not complete the SQL.
-        """.trimIndent(),
-        sqlTemplate = """
-
-        WITH base AS (
         SELECT CAST(x AS FLOAT64) AS x, CAST(y AS FLOAT64) AS y FROM (
             SELECT
+            [SELECT_FILTERS]
             DATE_DIFF(DATE(created_at), DATE('[START_DATE]'), DAY) + 1 AS x,
             COUNT(*) AS y
             FROM [TABLE_NAME]
-            WHERE event_type = 1
-            AND website_id = '[WEBSITE_ID]'
-            AND DATE(created_at) BETWEEN DATE('[START_DATE]') AND DATE('[END_DATE]')
+            WHERE website_id = //is handled
+            AND created_at >= TIMESTAMP('[START_DATE]')
+            AND created_at < TIMESTAMP_ADD(TIMESTAMP('[END_DATE]'), INTERVAL 1 DAY)
+            [ADD_FILTERS_HERE] // Specific filters based on the users question, e.g. "AND url_path LIKE '%/blogg/%'" or "AND browser = 'Chrome'"
+            GROUP BY x
+            )
+        ),
+        """.trimIndent(),
+        sqlTemplate = """ //website_id is handled
+        WITH base AS (
+        SELECT CAST(x AS FLOAT64) AS x, CAST(y AS FLOAT64) AS y FROM (
+            SELECT
+            [SELECT_FILTERS]
+            DATE_DIFF(DATE(created_at), DATE('[START_DATE]'), DAY) + 1 AS x,
+            COUNT(*) AS y
+            FROM [TABLE_NAME]
+            WHERE website_id = '[WEBSITE_ID]'
+            AND created_at >= TIMESTAMP('[START_DATE]')
+            AND created_at < TIMESTAMP_ADD(TIMESTAMP('[END_DATE]'), INTERVAL 1 DAY)
             [ADD_FILTERS_HERE]
             GROUP BY x
-        )
+            )
         ),
         stats AS (
         SELECT COUNT(*) AS n, AVG(x) AS x_bar, AVG(y) AS y_bar,
@@ -166,6 +169,7 @@ Columns:
         "START_DATE": [START_DATE],
         "END_DATE": [END_DATE],
         "TABLE_NAME": [TABLE_NAME],
+        "SELECT_FILTERS": [SELECT_FILTERS],
         "ADD_FILTERS_HERE": [ADD_FILTERS_HERE]
         }
         """.trimIndent() // website_id and event prefix is predetermined.
