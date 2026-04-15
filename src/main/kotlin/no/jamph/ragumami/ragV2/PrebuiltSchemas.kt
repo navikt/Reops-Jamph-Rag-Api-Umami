@@ -18,6 +18,7 @@ object PrebuiltSchemas {
                 "linear" -> linearSchema(schemaProvider!!)
                 "rankings" -> rankingsSchema(schemaProvider!!)
                 "search" -> searchSchema(schemaProvider!!)
+                "journey" -> journeySchema(schemaProvider!!)
                 else -> defaultSchema(schemaProvider!!)
             }
         }
@@ -175,6 +176,8 @@ Columns:
         """.trimIndent() // website_id, TABLE, prefix are predetermined.
     )
     
+    // event types and table is missing.
+
     private fun rankingsSchema(schemaProvider: BigQuerySchemaProvider) = SchemaTriple(
         bigQuerySchema = """
             Table: `prefix.event`
@@ -197,10 +200,10 @@ Columns:
 
         simplifiedSql = """
             SELECT [RANK_COLUMN] AS x, COUNT(*) AS count
-            [Setect_filters]
+            [SELECT_FILTERS]
             FROM [TABLE]
             WHERE website_id //is handled
-                [where_FILTERs]
+                [WHERE_FILTERS]
                 AND created_at >= '[START_DATE]'
                 AND created_at < '[END_DATE]'
             GROUP BY x
@@ -210,6 +213,7 @@ Columns:
 
         sqlTemplate = """
             SELECT [RANK_COLUMN] AS x , COUNT(*) AS count
+            [SELECT_FILTERS]
             FROM [TABLE]
             WHERE website_id = '[WEBSITE_ID]'
                 [WHERE_FILTERS]
@@ -271,8 +275,8 @@ Columns:
         // The SQL that gets run against BigQuery
         sqlTemplate = """
             SELECT COUNT(*) AS total_searches
-            FROM `fagtorsdag-prod-81a6.umami_student.event` e
-            JOIN `fagtorsdag-prod-81a6.umami_student.event_data` ed ON e.event_id = ed.website_event_id
+            FROM `prefix.event` e
+            JOIN `prefix.event_data` ed ON e.event_id = ed.website_event_id
             CROSS JOIN UNNEST(ed.event_parameters) AS p
             WHERE e.website_id = '[WEBSITE_ID]'
                 AND e.event_type = 2
@@ -308,9 +312,198 @@ Columns:
     )
 
         private fun journeySchema(schemaProvider: BigQuerySchemaProvider) = SchemaTriple(
-        bigQuerySchema = """${schemaProvider}""".trimIndent(),
-        simplifiedSql = """Write your own SQLwith Bigquery dialect here""".trimIndent(),
-        sqlTemplate = """N/A""".trimIndent(),
-        jsonSchema = """RETURN SQL""".trimIndent()
+        
+        bigQuerySchema = """ 
+        Current time: 2025-12-30 YYYY-MM-DD
+        Table: `prefix.event`
+        Columns:
+        -- WHERE website_id = 'secret'  AND event_type = 1  AND url_path IS NOT NULL - Results: '/', '/komponenter/core', '/komponenter/ikoner', '/designsystemet', '/grunnleggende/styling/design-tokens', '/god-praksis', '/komponenter/core/button', '/komponenter/core/table', '/produktbloggen', '/monster-maler/soknadsdialog/introside-for-soknadsdialoger'
+        """.trimIndent(),
+        simplifiedSql = """
+        WITH config AS (
+        SELECT 
+            '[START_PATH]' AS start_path,
+            '[END_PATH]' AS end_path
+        ),
+
+        all_events AS (
+        SELECT 
+            session_id,
+            url_path,
+            event_type,
+            event_name,
+            created_at,
+            ROW_NUMBER() OVER (PARTITION BY session_id ORDER BY created_at) AS step_in_session
+        FROM `prefix.event`
+        WHERE website_id = //is handled
+            AND created_at >= TIMESTAMP('[START_DATE]')
+            AND created_at < TIMESTAMP('[END_DATE]')
+
+        -- function() -- this function fixes everything.
+        )
+        """.trimIndent(),
+        sqlTemplate = """
+        -- Step 0: Visitors who navigated from / to intro page
+
+        -- CONFIGURATION: Change paths here
+        WITH config AS (
+        SELECT 
+            '[START_PATH]' AS start_path,
+            '[END_PATH]' AS end_path
+        ),
+
+        all_events AS (
+        SELECT 
+            session_id,
+            url_path,
+            event_type,
+            event_name,
+            created_at,
+            ROW_NUMBER() OVER (PARTITION BY session_id ORDER BY created_at) AS step_in_session
+        FROM `prefix.event`
+        WHERE website_id = '[WEBSITE_ID]'
+            AND created_at >= TIMESTAMP('[START_DATE]')
+            AND created_at < TIMESTAMP('[END_DATE]')
+        ),
+
+        from_homepage AS (
+        SELECT DISTINCT ae.session_id, ae.step_in_session AS homepage_step
+        FROM all_events ae
+        CROSS JOIN config c
+        WHERE ae.url_path = c.start_path
+            AND ae.event_type = 1
+        ),
+
+        steps AS (
+        SELECT 0 AS step_num
+        UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4
+        UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8
+        UNION ALL SELECT 9
+        ),
+
+        all_step_actions AS (
+        SELECT 
+            s.step_num,
+            ae.session_id,
+            CASE 
+            WHEN ae.url_path = c.end_path THEN 'Fullførte'
+            WHEN ae.event_type = 1 THEN ae.url_path
+            WHEN ae.event_type = 2 THEN CONCAT('Event: ', ae.event_name)
+            END AS action,
+            -- Mark when this session succeeded
+            MAX(CASE WHEN ae.url_path = c.end_path THEN s.step_num END) 
+            OVER (PARTITION BY ae.session_id) AS succeeded_at_step
+        FROM steps s
+        CROSS JOIN from_homepage fh
+        CROSS JOIN config c
+        JOIN all_events ae ON ae.session_id = fh.session_id
+        WHERE ae.step_in_session = fh.homepage_step + s.step_num
+            -- Exclude sessions that already succeeded in earlier steps
+            AND NOT EXISTS (
+            SELECT 1 FROM all_events ae2, config c2
+            WHERE ae2.session_id = fh.session_id
+                AND ae2.url_path = c2.end_path
+                AND ae2.step_in_session BETWEEN fh.homepage_step AND fh.homepage_step + s.step_num - 1
+            )
+        ),
+
+        -- Track sessions that dropped out (had activity in previous step but not current)
+        dropouts AS (
+        SELECT 
+            s.step_num,
+            fh.session_id,
+            'Forlot siden' AS action
+        FROM steps s
+        CROSS JOIN from_homepage fh
+        WHERE s.step_num > 0  -- Can't drop out at step 0
+            -- Had activity at previous step
+            AND EXISTS (
+            SELECT 1 FROM all_events ae
+            WHERE ae.session_id = fh.session_id
+                AND ae.step_in_session = fh.homepage_step + s.step_num - 1
+            )
+            -- But NO activity at current step
+            AND NOT EXISTS (
+            SELECT 1 FROM all_events ae
+            WHERE ae.session_id = fh.session_id
+                AND ae.step_in_session = fh.homepage_step + s.step_num
+            )
+            -- And didn't succeed in earlier steps
+            AND NOT EXISTS (
+            SELECT 1 FROM all_events ae2, config c2
+            WHERE ae2.session_id = fh.session_id
+                AND ae2.url_path = c2.end_path
+                AND ae2.step_in_session < fh.homepage_step + s.step_num
+            )
+        ),
+
+        -- It's not practical to implement the logic for people who gave up but stayed on the site. 
+
+        combined_actions AS (
+        SELECT step_num, session_id, action FROM all_step_actions
+        UNION ALL
+        SELECT step_num, session_id, action FROM dropouts
+        ),
+
+        top_10_per_step AS (
+        SELECT 
+            step_num,
+            action,
+            COUNT(DISTINCT session_id) AS visitor_count,
+            ROW_NUMBER() OVER (PARTITION BY step_num ORDER BY COUNT(DISTINCT session_id) DESC) AS rank
+        FROM combined_actions
+        GROUP BY step_num, action
+        QUALIFY rank <= 10
+        ),
+
+        homepage_count AS (
+        SELECT CONCAT((SELECT start_path FROM config), ' ', COUNT(DISTINCT session_id)) AS count_text
+        FROM from_homepage
+        ),
+
+        -- Calculate summary statistics for column 10
+        summary_stats AS (
+        SELECT
+            (SELECT COUNT(DISTINCT session_id) FROM from_homepage) AS total_sessions,
+            (SELECT COUNT(DISTINCT ae.session_id) 
+            FROM all_events ae 
+            CROSS JOIN config c
+            JOIN from_homepage fh ON ae.session_id = fh.session_id
+            WHERE ae.url_path = c.end_path
+            AND ae.step_in_session >= fh.homepage_step) AS succeeded,
+            (SELECT COUNT(DISTINCT session_id) FROM dropouts) AS failed
+        )
+
+        -- Pivot: Show all steps aligned in rows
+        SELECT 
+        CASE WHEN rank = 1 THEN (SELECT count_text FROM homepage_count) END AS `0`,
+        MAX(CASE WHEN step_num = 1 THEN CONCAT(action, ' ', visitor_count) END) AS `1`,
+        MAX(CASE WHEN step_num = 2 THEN CONCAT(action, ' ', visitor_count) END) AS `2`,
+        MAX(CASE WHEN step_num = 3 THEN CONCAT(action, ' ', visitor_count) END) AS `3`,
+        MAX(CASE WHEN step_num = 4 THEN CONCAT(action, ' ', visitor_count) END) AS `4`,
+        MAX(CASE WHEN step_num = 5 THEN CONCAT(action, ' ', visitor_count) END) AS `5`,
+        MAX(CASE WHEN step_num = 6 THEN CONCAT(action, ' ', visitor_count) END) AS `6`,
+        MAX(CASE WHEN step_num = 7 THEN CONCAT(action, ' ', visitor_count) END) AS `7`,
+        MAX(CASE WHEN step_num = 8 THEN CONCAT(action, ' ', visitor_count) END) AS `8`,
+        MAX(CASE WHEN step_num = 9 THEN CONCAT(action, ' ', visitor_count) END) AS `9`,
+        CASE WHEN rank = 1 THEN (
+            SELECT CONCAT(
+            'Fullførte: ', succeeded, ' | ',
+            'Forlot: ', failed, ' | ',
+            'Ubestemt: ', (total_sessions - succeeded - failed)
+            )
+            FROM summary_stats
+        ) END AS `10`
+        FROM top_10_per_step
+        GROUP BY rank
+        ORDER BY rank;
+
+        """.trimIndent(),
+        jsonSchema = """
+        "START_PATH": '[START_PATH]',
+        "END_PATH": '[END_PATH]',
+        "START_DATE": '[START_DATE]',
+        "END_DATE": '[END_DATE]',
+        """.trimIndent()
     )
 }

@@ -83,8 +83,8 @@ class PickASqlQuestionTypeLlm(
         - linear: ONLY For explicit TREND/REGRESSION analysis. Examples: "Hvordan endrer trafikken seg","gjør en trendanalyse"
         - rankings: ONLY For queries that ask for top/bottom results. Examples: "top pages", "most visited pages", "least popular pages"
         - search: ONLY For queries asking how many users searched for a SPECIFIC term. Examples: "hvor mange søker på accessibility", "hvor mange søker etter universell utforming", "søkeantall for ki"
+        - journey: ONLY For queries that ask about user journeys or sequences of page visits. Needs two pages to apply. Examples: "hvor mange går fra startsiden til produktsiden", "hvor mange går fra / til /komponenter/ikoner"
         - default: Everything else. This can handle a wide variety of questions.
-        - journey: ONLY For queries that ask about user journeys or sequences of page visits. Examples: "hvor mange går fra startsiden til produktsiden", "brukerreise fra blogg til kontakt oss", "hvor mange går fra A til B"
         
         User question: $userPrompt
         
