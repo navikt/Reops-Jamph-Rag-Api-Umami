@@ -240,7 +240,15 @@ Columns:
 
     // For questions like "how many searched for X" / "hvor mange søker etter X"
     // Finds search events (event_name='sok') and counts how many match the given term
-    
+
+    //Why it fails, 
+    // event_name = 'sok' exists (7,994 records) BUT those are organic search referrals (visitors from Google), NOT internal site searches.
+    // NO event_data records
+    // query key does not exist
+
+    // only 11 searches total. most for "hei".
+    // Reality can use url_path to find searches. see file.
+    // NAV needs to have tracking for us to complete this schema.
     private fun searchSchema(schemaProvider: BigQuerySchemaProvider) = SchemaTriple(
         // Only the tables and columns needed for this query
         bigQuerySchema = """
