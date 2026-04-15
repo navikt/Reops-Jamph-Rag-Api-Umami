@@ -33,7 +33,7 @@ object PrebuiltSchemas {
 
 === DATABASE TABLES ===
 
-Table: `session`
+Table: `prefix.session`
 Columns:
   - session_id (STRING, NULLABLE) - Unique identifier for a visitor session
   - hostname (STRING, NULLABLE)
@@ -46,7 +46,7 @@ Columns:
   - created_at (TIMESTAMP, NULLABLE)
   - session_parameters (ARRAY<STRUCT<data_key STRING, string_value STRING, number_value FLOAT64, date_value TIMESTAMP, data_type INT64>>, REQUIRED) - Unnest to access: CROSS JOIN UNNEST(session_parameters) AS p, then use p.data_key, p.string_value, etc.
 
-Table: `event`
+Table: `prefix.event`
 Columns:
   - event_id (STRING, REQUIRED)
   - session_id (STRING, NULLABLE)
@@ -80,11 +80,11 @@ Columns:
             [SELECT_FILTERS]
             DATE_DIFF(DATE(created_at), DATE('[START_DATE]'), DAY) + 1 AS x,
             COUNT(*) AS y
-            FROM [TABLE_NAME]
-            WHERE website_id = //is handled
+            FROM [TABLE]
+            WHERE website_id = // is handled is handled
             AND created_at >= TIMESTAMP('[START_DATE]')
             AND created_at < TIMESTAMP_ADD(TIMESTAMP('[END_DATE]'), INTERVAL 1 DAY)
-            [ADD_FILTERS_HERE] // Specific filters based on the users question, e.g. "AND url_path LIKE '%/blogg/%'" or "AND browser = 'Chrome'"
+            [WHERE_FILTERS] // Specific filters based on the users question, e.g. "AND url_path LIKE '%/blogg/%'" or "AND browser = 'Chrome'"
             GROUP BY x
             )
         ),
@@ -96,7 +96,7 @@ Columns:
             [SELECT_FILTERS]
             DATE_DIFF(DATE(created_at), DATE('[START_DATE]'), DAY) + 1 AS x,
             COUNT(*) AS y
-            FROM [TABLE_NAME]
+            FROM [TABLE]
             WHERE website_id = '[WEBSITE_ID]'
             AND created_at >= TIMESTAMP('[START_DATE]')
             AND created_at < TIMESTAMP_ADD(TIMESTAMP('[END_DATE]'), INTERVAL 1 DAY)
@@ -166,24 +166,25 @@ Columns:
         """.trimIndent(),
         jsonSchema = """
         {
+        "TABLE": [TABLE],
         "START_DATE": [START_DATE],
         "END_DATE": [END_DATE],
         "SELECT_FILTERS": [SELECT_FILTERS],
-        "ADD_FILTERS_HERE": [ADD_FILTERS_HERE]
+        "WHERE_FILTERS": [WHERE_FILTERS]
         }
-        """.trimIndent() // website_id, TABLE_NAME (prefix+table), and event prefix are predetermined.
+        """.trimIndent() // website_id, TABLE, prefix are predetermined.
     )
     
     private fun rankingsSchema(schemaProvider: BigQuerySchemaProvider) = SchemaTriple(
         bigQuerySchema = """
-            Table: `event`
+            Table: `prefix.event`
               - website_id (STRING, NULLABLE)
               - url_path (STRING, NULLABLE)      -- the page URL path, e.g. '/artikkel/tilgjengelighet'
               - page_title (STRING, NULLABLE)    -- human-readable page title
               - event_type (INT64, NULLABLE)     -- 1 = page view, 2 = custom event
               - created_at (TIMESTAMP, NULLABLE)
 
-            Table: `session`
+            Table: `prefix.session`
               - website_id (STRING, NULLABLE)
               - browser (STRING, NULLABLE)       -- e.g. 'Chrome', 'Firefox'
               - os (STRING, NULLABLE)            -- e.g. 'Windows', 'iOS', 'Android'
@@ -243,7 +244,7 @@ Columns:
     private fun searchSchema(schemaProvider: BigQuerySchemaProvider) = SchemaTriple(
         // Only the tables and columns needed for this query
         bigQuerySchema = """
-            Table: `event`
+            Table: `prefix.event`
               - event_id (STRING, REQUIRED)
               - website_id (STRING, NULLABLE)
               - session_id (STRING, NULLABLE)
@@ -251,7 +252,7 @@ Columns:
               - event_type (INT64, NULLABLE)  -- 2 = custom event
               - event_name (STRING, NULLABLE) -- 'sok' = search
 
-            Table: `event_data`
+            Table: `prefix.event_data`
               - website_event_id (STRING, REQUIRED) -- join: event.event_id = event_data.website_event_id
               - website_id (STRING, NULLABLE)
               - event_parameters (ARRAY<STRUCT<data_key STRING, string_value STRING>>, REQUIRED)
