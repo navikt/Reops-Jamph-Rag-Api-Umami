@@ -313,11 +313,10 @@ Columns:
 
         private fun journeySchema(schemaProvider: BigQuerySchemaProvider) = SchemaTriple(
         
-        bigQuerySchema = """ 
-        Current time: 2025-12-30 YYYY-MM-DD
-        Table: `prefix.event`
-        Columns:
-        -- WHERE website_id = 'secret'  AND event_type = 1  AND url_path IS NOT NULL - Results: '/', '/komponenter/core', '/komponenter/ikoner', '/designsystemet', '/grunnleggende/styling/design-tokens', '/god-praksis', '/komponenter/core/button', '/komponenter/core/table', '/produktbloggen', '/monster-maler/soknadsdialog/introside-for-soknadsdialoger'
+        bigQuerySchema = """
+        Current time: 2025-12-30
+        
+        Known values of url_path: '/komponenter/core', '/komponenter/ikoner', '/designsystemet', '/grunnleggende/styling/design-tokens', '/god-praksis', '/komponenter/core/button', '/komponenter/core/linkcard', '/komponenter/core/table', '/komponenter/primitives/box', '/komponenter/core/datepicker', '/komponenter/core/typography', '/komponenter/core/accordion', '/grunnleggende/darkside/ny-versjon-av-aksel-darkside', '/komponenter/core/actionmenu', '/komponenter/core/combobox', '/komponenter/core/alert', '/produktbloggen', '/komponenter/core/textfield', '/grunnleggende/darkside/design-tokens', '/komponenter/primitives/hstack', '/komponenter/core/expansioncard', '/komponenter/core/modal', '/komponenter/primitives/page', '/komponenter/core/radio', '/komponenter/core/link', '/komponenter/core/chips', '/komponenter/core/select', '/komponenter/core/checkbox', '/komponenter/core/tag', '/grunnleggende/styling/farger', '/komponenter/core/stepper', '/komponenter/core/eksperimenter', '/komponenter/core/process', '/god-praksis/brukerinnsikt', '/'
         """.trimIndent(),
         simplifiedSql = """
         WITH config AS (
@@ -334,7 +333,7 @@ Columns:
             event_name,
             created_at,
             ROW_NUMBER() OVER (PARTITION BY session_id ORDER BY created_at) AS step_in_session
-        FROM `prefix.event`
+        FROM `prefixevent`
         WHERE website_id = //is handled
             AND created_at >= TIMESTAMP('[START_DATE]')
             AND created_at < TIMESTAMP('[END_DATE]')
@@ -360,7 +359,7 @@ Columns:
             event_name,
             created_at,
             ROW_NUMBER() OVER (PARTITION BY session_id ORDER BY created_at) AS step_in_session
-        FROM `prefix.event`
+        FROM `prefixevent`
         WHERE website_id = '[WEBSITE_ID]'
             AND created_at >= TIMESTAMP('[START_DATE]')
             AND created_at < TIMESTAMP('[END_DATE]')
