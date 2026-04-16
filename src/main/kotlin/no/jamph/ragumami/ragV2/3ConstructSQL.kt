@@ -43,16 +43,9 @@ private fun injectPredeterminedVariables(
     
     result = result.replace("[WEBSITE_ID]", siteId)
     result = result.replace("[PATH]", urlPath)
-    result = result.replace("`prefix.event`", "`$prefix.event`")
-    result = result.replace("`prefix.session`", "`$prefix.session`")
-    result = result.replace("`prefix.event_data`", "`$prefix.event_data`")
-    result = result.replace("`prefix.public_website`", "`$prefix.public_website`")
-    
-    // Also handle non-backtick versions
-    result = result.replace("prefix.event", "$prefix.event")
-    result = result.replace("prefix.session", "$prefix.session")
-    result = result.replace("prefix.event_data", "$prefix.event_data")
-    result = result.replace("prefix.public_website", "$prefix.public_website")
+
+    result = result.replace("`prefix.", "`$prefix")
+    result = result.replace("prefix.", prefix)
 
     return result
 }
