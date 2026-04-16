@@ -317,6 +317,7 @@ Columns:
         Current time: 2025-12-30
         
         Known values of url_path: '/komponenter/core', '/komponenter/ikoner', '/designsystemet', '/grunnleggende/styling/design-tokens', '/god-praksis', '/komponenter/core/button', '/komponenter/core/linkcard', '/komponenter/core/table', '/komponenter/primitives/box', '/komponenter/core/datepicker', '/komponenter/core/typography', '/komponenter/core/accordion', '/grunnleggende/darkside/ny-versjon-av-aksel-darkside', '/komponenter/core/actionmenu', '/komponenter/core/combobox', '/komponenter/core/alert', '/produktbloggen', '/komponenter/core/textfield', '/grunnleggende/darkside/design-tokens', '/komponenter/primitives/hstack', '/komponenter/core/expansioncard', '/komponenter/core/modal', '/komponenter/primitives/page', '/komponenter/core/radio', '/komponenter/core/link', '/komponenter/core/chips', '/komponenter/core/select', '/komponenter/core/checkbox', '/komponenter/core/tag', '/grunnleggende/styling/farger', '/komponenter/core/stepper', '/komponenter/core/eksperimenter', '/komponenter/core/process', '/god-praksis/brukerinnsikt', '/'
+        if no time is specified, use the latest year.
         """.trimIndent(),
         simplifiedSql = """
         WITH config AS (
