@@ -159,8 +159,8 @@ fun LlmSqlLogic(
                 Rule("contains url_path or path column") { sql -> sql.lowercase().contains("url_path") || sql.lowercase().contains("path") || sql.lowercase().contains("page") },
             )
         ),
-        TestCase(//  Spørsmålet kommer fra brukerundersøkelse test v2  // hvor mange får 404 og hvor kommer de fra er viktig for å identifisere problemer på siden, så jeg beholder denne testen selv om den er litt lik den andre
-            question = "Hvilke sider er det som ikke virker?",
+        TestCase(//  Spørsmålet kommer fra brukerundersøkelse test v2  // Default burde klare å svare på dette.
+            question = "Hvor mange kommer fra 404 og hvor kommer de fra?",
             url = "https://aksel.nav.no",
             rules = listOf(
                 Rule("valid SQL syntax") { sql -> isSqlQueryValid(sql) },
@@ -182,7 +182,7 @@ fun LlmSqlLogic(
         //),
         
         TestCase( // Spørsmålet kommer fra brukertest v2 // Eget rag skjema er innført for å kunne hådtere denne typen spørsmål bedre, så denne testen er litt mer fleksibel på hva slags SQL som kommer
-            question = "oversikt, fra start til fullført søknad. utloggede og innloggede sider",
+            question = "oversikt fra / til /komponenter/ikoner ",//oversikt, fra start til fullført søknad utloggede og innloggede sider.,
             url = "https://aksel.nav.no",
             rules = listOf(
                 Rule("valid SQL syntax") { sql -> isSqlQueryValid(sql) },
@@ -192,7 +192,7 @@ fun LlmSqlLogic(
         ),
 
         TestCase( // Spørsmålet kommer fra brukertest v2 // Denne er ikke implementert og det forventes at modellen feiler. Hvis den bruker journey, kan det telle positivt.
-            question = "hvor mange går gjennpomsnittlig i måneden fra forsiden til linkcardkomponentsiden?",
+            question = "hvor mange går gjennomsnittlig i måneden fra forsiden til linkcardkomponentsiden?",
             url = "https://aksel.nav.no",
             rules = listOf(
                 Rule("valid SQL syntax") { sql -> isSqlQueryValid(sql) },
@@ -222,10 +222,20 @@ fun LlmSqlLogic(
                 Rule("contains website_id") { sql -> sql.contains(AKSEL_ID) },
                 Rule("contains '/komponenter/core'") { sql -> sql.lowercase().contains("/komponenter/core") },
             )
-        )
+        ),
+        
+        TestCase(// Spørsmålet kommer fra brukertest v2
+            question = "Hvor mye tid bruker folk på siden",
+            url = "https://aksel.nav.no",
+            rules = listOf(
+                Rule("valid SQL syntax") { sql -> isSqlQueryValid(sql) },
+                Rule("contains fagtorsdag project") { sql -> sql.contains("fagtorsdag-prod-81a6.umami_student") },
+                Rule("contains website_id") { sql -> sql.contains(AKSEL_ID) },
+                Rule("contains 'time on page' or 'session duration'") { sql -> Regex("'time on page'|'session duration'", RegexOption.IGNORE_CASE).containsMatchIn(sql) },
+            )
+        ),
 
-
-        // for versjon 2: testCase(
+        // for versjon 2: Spørsmål fra brukertest v2 som ble vurdert.
         //     question = "Er det noen sider om ki på aksel",
         //     question = "Hvor mange besøker 404 og hvor kommer de fra?"
         //     question = "bruker brukerne mus, keyboard og assistert teknologi. på accordion"
@@ -239,7 +249,7 @@ fun LlmSqlLogic(
         //     question = "Har mange søkt på "produkt" type rullestol eller hjelpemiddel"
         //     question = "Hvor mye tid bruker folk på siden"
         //     question = "er apple mer populært enn windows? på siden" (kanskje liten skjema endring)
-        ),
+        //
     )
 
     var correctCount = 0
