@@ -515,7 +515,6 @@ Columns:
         ${schemaProvider.getSchemaContext()}  
         Important:       
         - If the user asks for fewer than 4 facts, set unused fact names to 'empty'.
-        
         - For WHERE conditions, use TRUE if no additional filter is needed for that fact.
         
         """.trimIndent(),

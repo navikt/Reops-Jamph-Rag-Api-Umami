@@ -18,8 +18,6 @@
         <flyway.version>10.21.0</flyway.version>
         <ktor.version>3.0.2</ktor.version>
         <logback.version>1.5.12</logback.version>
-        <langchain4j.version>0.36.2</langchain4j.version>
-        <mlflow.version>2.18.0</mlflow.version>
         <kotlin.code.style>official</kotlin.code.style>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
@@ -130,34 +128,6 @@
             <version>${logback.version}</version>
         </dependency>
 
-        <!-- LangChain4j - LLM Orchestration -->
-        <dependency>
-            <groupId>dev.langchain4j</groupId>
-            <artifactId>langchain4j</artifactId>
-            <version>${langchain4j.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>dev.langchain4j</groupId>
-            <artifactId>langchain4j-ollama</artifactId>
-            <version>${langchain4j.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>dev.langchain4j</groupId>
-            <artifactId>langchain4j-embeddings</artifactId>
-            <version>${langchain4j.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>dev.langchain4j</groupId>
-            <artifactId>langchain4j-easy-rag</artifactId>
-            <version>${langchain4j.version}</version>
-        </dependency>
-
-        <!-- MLflow - Production Monitoring & Experiment Tracking -->
-        <dependency>
-            <groupId>org.mlflow</groupId>
-            <artifactId>mlflow-client</artifactId>
-            <version>${mlflow.version}</version>
-        </dependency>
 
         <!-- Google Cloud BigQuery -->
         <dependency>
