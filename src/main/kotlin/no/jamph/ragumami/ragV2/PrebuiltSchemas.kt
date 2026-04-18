@@ -515,7 +515,7 @@ Columns:
         ${schemaProvider}  
         Important:       
         - If the user asks for fewer than 4 facts, set unused fact names to 'empty'.
-        - Remember to include AND statements.
+        - For WHERE conditions, use TRUE if no additional filter is needed for that fact.
         
         """.trimIndent(),
 
@@ -561,53 +561,47 @@ Columns:
         """.trimIndent(),
 
         sqlTemplate = """
-            CREATE TEMP TABLE facts (category STRING, value INT64);
-
-            -- Always insert FACT1
-            INSERT INTO facts
+            -- Fact 1 (always included)
             SELECT '[FACT1_NAME]' AS category, [SELECT1] AS value
             FROM [TABLE1]
             WHERE website_id = '[WEBSITE_ID]'
               AND created_at >= TIMESTAMP('[START_DATE]')
               AND created_at < TIMESTAMP('[END_DATE]')
-              AND [WHERE1];
+              AND [WHERE1]
 
-            -- Always insert FACT2
-            INSERT INTO facts
+            UNION ALL
+
+            -- Fact 2 (always included)
             SELECT '[FACT2_NAME]' AS category, [SELECT2] AS value
             FROM [TABLE2]
             WHERE website_id = '[WEBSITE_ID]'
               AND created_at >= TIMESTAMP('[START_DATE]')
               AND created_at < TIMESTAMP('[END_DATE]')
-              AND [WHERE2];
+              AND [WHERE2]
 
-            -- Conditionally insert FACT3
-            IF '[FACT3_NAME]' != 'empty' THEN
-              INSERT INTO facts
-              SELECT '[FACT3_NAME]' AS category, [SELECT3] AS value
-              FROM [TABLE3]
-              WHERE website_id = '[WEBSITE_ID]'
-                AND created_at >= TIMESTAMP('[START_DATE]')
-                AND created_at < TIMESTAMP('[END_DATE]')
-                AND [WHERE3];
-            END IF;
+            UNION ALL
 
-            -- Conditionally insert FACT4
-            IF '[FACT4_NAME]' != 'empty' THEN
-              INSERT INTO facts
-              SELECT '[FACT4_NAME]' AS category, [SELECT4] AS value
-              FROM [TABLE4]
-              WHERE website_id = '[WEBSITE_ID]'
-                AND created_at >= TIMESTAMP('[START_DATE]')
-                AND created_at < TIMESTAMP('[END_DATE]')
-                AND [WHERE4];
-            END IF;
+            -- Fact 3 (conditional)
+            SELECT '[FACT3_NAME]' AS category, [SELECT3] AS value
+            FROM [TABLE3]
+            WHERE website_id = '[WEBSITE_ID]'
+              AND created_at >= TIMESTAMP('[START_DATE]')
+              AND created_at < TIMESTAMP('[END_DATE]')
+              AND [WHERE3]
+              AND '[FACT3_NAME]' != 'empty'
 
-            -- Return results
-            SELECT category, value
-            FROM facts
+            UNION ALL
+
+            -- Fact 4 (conditional)
+            SELECT '[FACT4_NAME]' AS category, [SELECT4] AS value
+            FROM [TABLE4]
+            WHERE website_id = '[WEBSITE_ID]'
+              AND created_at >= TIMESTAMP('[START_DATE]')
+              AND created_at < TIMESTAMP('[END_DATE]')
+              AND [WHERE4]
+              AND '[FACT4_NAME]' != 'empty'
+
             ORDER BY category;
-
 
         """.trimIndent(),
 
