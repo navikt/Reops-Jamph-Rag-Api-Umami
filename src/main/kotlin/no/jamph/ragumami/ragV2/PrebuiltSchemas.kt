@@ -513,8 +513,10 @@ Columns:
         bigQuerySchema = """
         Current time: 2025-12-30
         ${schemaProvider}  
-        Importent:       
+        Important:       
         - If the user asks for fewer than 4 facts, set unused fact names to 'empty'.
+        - Remember to include AND statements.
+        
         """.trimIndent(),
 
         simplifiedSql = """
@@ -524,7 +526,7 @@ Columns:
               WHERE website_id //is handled
                 AND created_at >= '[START_DATE]'
                 AND created_at < '[END_DATE]'
-                [WHERE1]
+                AND [WHERE1]
 
               UNION ALL
 
@@ -533,7 +535,7 @@ Columns:
               WHERE website_id //is handled
                 AND created_at >= '[START_DATE]'
                 AND created_at < '[END_DATE]'
-                [WHERE2]
+                AND [WHERE2]
 
               UNION ALL
 
@@ -542,7 +544,7 @@ Columns:
               WHERE website_id //is handled
                 AND created_at >= '[START_DATE]'
                 AND created_at < '[END_DATE]'
-                [WHERE3]
+                AND [WHERE3]
 
               UNION ALL
 
@@ -551,7 +553,7 @@ Columns:
               WHERE website_id //is handled
                 AND created_at >= '[START_DATE]'
                 AND created_at < '[END_DATE]'
-                [WHERE4]
+                AND [WHERE4]
             )
             SELECT category, value
             FROM facts
@@ -568,7 +570,7 @@ Columns:
             WHERE website_id = '[WEBSITE_ID]'
               AND created_at >= TIMESTAMP('[START_DATE]')
               AND created_at < TIMESTAMP('[END_DATE]')
-              [WHERE1];
+              AND [WHERE1];
 
             -- Always insert FACT2
             INSERT INTO facts
@@ -577,7 +579,7 @@ Columns:
             WHERE website_id = '[WEBSITE_ID]'
               AND created_at >= TIMESTAMP('[START_DATE]')
               AND created_at < TIMESTAMP('[END_DATE]')
-              [WHERE2];
+              AND [WHERE2];
 
             -- Conditionally insert FACT3
             IF '[FACT3_NAME]' != 'empty' THEN
@@ -587,7 +589,7 @@ Columns:
               WHERE website_id = '[WEBSITE_ID]'
                 AND created_at >= TIMESTAMP('[START_DATE]')
                 AND created_at < TIMESTAMP('[END_DATE]')
-                [WHERE3];
+                AND [WHERE3];
             END IF;
 
             -- Conditionally insert FACT4
@@ -598,13 +600,15 @@ Columns:
               WHERE website_id = '[WEBSITE_ID]'
                 AND created_at >= TIMESTAMP('[START_DATE]')
                 AND created_at < TIMESTAMP('[END_DATE]')
-                [WHERE4];
+                AND [WHERE4];
             END IF;
 
             -- Return results
             SELECT category, value
             FROM facts
             ORDER BY category;
+
+
         """.trimIndent(),
 
         jsonSchema = """
