@@ -341,7 +341,6 @@ Columns:
         )
         """.trimIndent(),
         sqlTemplate = """
-        -- Step 0: Visitors who navigated from / to intro page
 
         -- CONFIGURATION: Change paths here
         WITH config AS (
@@ -505,7 +504,6 @@ Columns:
         """.trimIndent()
     )
     
-    // Kladd cards
     private fun cardsSchema(schemaProvider: BigQuerySchemaProvider) = SchemaTriple(
         bigQuerySchema = """
         ${schemaProvider.getSchemaContext()}  

@@ -36,10 +36,16 @@ spec:
         - host: www.googleapis.com
   liveness:
     path: /health
-    initialDelay: 20
+    initialDelay: 30
+    timeout: 5
+    periodSeconds: 15
+    failureThreshold: 5
   readiness:
     path: /health
-    initialDelay: 5
+    initialDelay: 20
+    timeout: 5
+    periodSeconds: 10
+    failureThreshold: 3
   ingresses:
     - "https://jamph-rag-api-umami.ansatt.nav.no"
   resources:
