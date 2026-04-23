@@ -216,7 +216,7 @@ Columns:
         sqlTemplate = """
             SELECT [RANK_COLUMN] AS x , COUNT(*) AS count
             [SELECT_FILTERS]
-            FROM [TABLE]
+            FROM `[TABLE]`
             WHERE website_id = '[WEBSITE_ID]'
                 [WHERE_FILTERS]
                 AND created_at >= TIMESTAMP('[START_DATE]')
