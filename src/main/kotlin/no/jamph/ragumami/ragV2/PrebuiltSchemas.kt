@@ -27,6 +27,8 @@ object PrebuiltSchemas {
     fun getSimplifiedSql(type: String, schemaProvider: BigQuerySchemaProvider) = resolve(type, schemaProvider).simplifiedSql
     fun getJsonSchema(type: String, schemaProvider: BigQuerySchemaProvider) = resolve(type, schemaProvider).jsonSchema
     
+
+    //you should describe in the schema text that METRIC_SQL must be an aggregate metric.
     private fun linearSchema(schemaProvider: BigQuerySchemaProvider) = SchemaTriple(
         bigQuerySchema = """
 
@@ -70,31 +72,32 @@ Columns:
   - website_share_id (STRING, NULLABLE)
   - website_team_id (STRING, NULLABLE)
 
+  Important:
+  METRIC_SQL must be an aggregate expression that produces a single numeric value for each day. For example, "COUNT(*)" or "SUM(p.number_value)" where p is an unnested parameter. The x-axis will be days since the start date, and the y-axis will be the value of this metric.
+
         """.trimIndent(),
         simplifiedSql = """
         For context only:
         WITH base AS (
         SELECT CAST(x AS FLOAT64) AS x, CAST(y AS FLOAT64) AS y FROM (
             SELECT
-            [SELECT_FILTERS]
             DATE_DIFF(DATE(created_at), DATE('[START_DATE]'), DAY) + 1 AS x,
-            COUNT(*) AS y
+            [METRIC_SQL] AS y
             FROM [TABLE]
-            WHERE website_id = // is handled is handled
+            WHERE website_id = -- is handled is handled
             AND created_at >= TIMESTAMP('[START_DATE]')
             AND created_at < TIMESTAMP_ADD(TIMESTAMP('[END_DATE]'), INTERVAL 1 DAY)
-            [WHERE_FILTERS] // Specific filters based on the users question, e.g. "AND url_path LIKE '%/blogg/%'" or "AND browser = 'Chrome'"
+            [WHERE_FILTERS] -- (optional)Specific filters based on the users question, e.g. "AND url_path LIKE '%/blogg/%'" or "AND browser = 'Chrome'"
             GROUP BY x
             )
         ),
-        """.trimIndent(),
-        sqlTemplate = """ //website_id is handled
+        """.trimIndent(),//website_id is handled
+        sqlTemplate = """ 
         WITH base AS (
         SELECT CAST(x AS FLOAT64) AS x, CAST(y AS FLOAT64) AS y FROM (
             SELECT
-            [SELECT_FILTERS]
             DATE_DIFF(DATE(created_at), DATE('[START_DATE]'), DAY) + 1 AS x,
-            COUNT(*) AS y
+            [METRIC_SQL] AS y
             FROM [TABLE]
             WHERE website_id = '[WEBSITE_ID]'
             AND created_at >= TIMESTAMP('[START_DATE]')
@@ -135,6 +138,7 @@ Columns:
             SQRT(SAFE_DIVIDE(sse, n - 2) * (1.0 / n + POW(x_bar, 2) / sxx)) AS se_a
         FROM sums
         ),
+        -- Approksimerer p-verdier for a og b ved å bruke t-verdiene og en normalfordeling
         pv AS (
         SELECT n, a, b, r2, rmse, se_a, se_b,
             SAFE_DIVIDE(a, se_a) AS t_a,
@@ -168,8 +172,8 @@ Columns:
         "TABLE": [TABLE],
         "START_DATE": [START_DATE],
         "END_DATE": [END_DATE],
-        "SELECT_FILTERS": [SELECT_FILTERS],
-        "WHERE_FILTERS": [WHERE_FILTERS]
+        "METRIC_SQL": [METRIC_SQL],
+        "WHERE_FILTERS": [WHERE_FILTERS] 
         }
         """.trimIndent() // website_id, TABLE, prefix are predetermined.
     )
@@ -555,7 +559,7 @@ Columns:
         """.trimIndent(),
 
         sqlTemplate = """
-            -- Fact 1 (always included)
+            -- Fakta 1
             SELECT '[FACT1_NAME]' AS category, [SELECT1] AS value
             FROM `[TABLE1]`
             WHERE website_id = '[WEBSITE_ID]'
@@ -565,7 +569,7 @@ Columns:
 
             UNION ALL
 
-            -- Fact 2 (always included)
+            -- Fakta 2
             SELECT '[FACT2_NAME]' AS category, [SELECT2] AS value
             FROM `[TABLE2]`
             WHERE website_id = '[WEBSITE_ID]'
@@ -575,7 +579,7 @@ Columns:
 
             UNION ALL
 
-            -- Fact 3 (conditional)
+            -- Fakta 3 (valgfri) -- du kan slette denne delen. (SELCECT - UNION ALL)
             SELECT '[FACT3_NAME]' AS category, [SELECT3] AS value
             FROM `[TABLE3]`
             WHERE website_id = '[WEBSITE_ID]'
@@ -586,7 +590,7 @@ Columns:
 
             UNION ALL
 
-            -- Fact 4 (conditional)
+            -- Fakta 4 (valgfri) -- du kan slette denne delen. (SELCECT - UNION ALL)
             SELECT '[FACT4_NAME]' AS category, [SELECT4] AS value
             FROM `[TABLE4]`
             WHERE website_id = '[WEBSITE_ID]'
