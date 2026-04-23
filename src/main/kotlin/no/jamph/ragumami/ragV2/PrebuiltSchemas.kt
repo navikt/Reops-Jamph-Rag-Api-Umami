@@ -223,9 +223,9 @@ Columns:
         """.trimIndent(),
         jsonSchema = """
             {
-              "TABLE_NAME": [TABLE],
+              "TABLE": [TABLE],
               "RANK_COLUMN": [RANK_COLUMN],
-              "EXTRA_FILTER": [EXTRA_FILTER],
+              "WHERE_FILTERS": [WHERE_FILTERS],
               "START_DATE": [START_DATE],
               "END_DATE": [END_DATE],
               "LIMIT": [LIMIT]
