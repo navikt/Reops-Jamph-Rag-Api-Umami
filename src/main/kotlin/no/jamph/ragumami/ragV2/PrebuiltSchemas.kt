@@ -83,7 +83,7 @@ Columns:
             SELECT
             DATE_DIFF(DATE(created_at), DATE('[START_DATE]'), DAY) + 1 AS x,
             [METRIC_SQL] AS y
-            FROM [TABLE]
+            FROM `[TABLE]`
             WHERE website_id = -- is handled is handled
             AND created_at >= TIMESTAMP('[START_DATE]')
             AND created_at < TIMESTAMP_ADD(TIMESTAMP('[END_DATE]'), INTERVAL 1 DAY)
