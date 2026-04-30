@@ -31,49 +31,49 @@ object PrebuiltSchemas {
     //you should describe in the schema text that METRIC_SQL must be an aggregate metric.
     private fun linearSchema(schemaProvider: BigQuerySchemaProvider) = SchemaTriple(
         bigQuerySchema = """
+        Current time: 2025-12-30
+        === DATABASE TABLES ===
 
-=== DATABASE TABLES ===
+        Table: `prefix.session`
+        Columns:
+        - session_id (STRING, NULLABLE) - Unique identifier for a visitor session
+        - hostname (STRING, NULLABLE)
+        - browser (STRING, NULLABLE)
+        - os (STRING, NULLABLE)
+        - device (STRING, NULLABLE)
+        - screen (STRING, NULLABLE)
+        - language (STRING, NULLABLE)
+        - country (STRING, NULLABLE)
+        - created_at (TIMESTAMP, NULLABLE)
+        - session_parameters (ARRAY<STRUCT<data_key STRING, string_value STRING, number_value FLOAT64, date_value TIMESTAMP, data_type INT64>>, REQUIRED) - Unnest to access: CROSS JOIN UNNEST(session_parameters) AS p, then use p.data_key, p.string_value, etc.
 
-Table: `prefix.session`
-Columns:
-  - session_id (STRING, NULLABLE) - Unique identifier for a visitor session
-  - hostname (STRING, NULLABLE)
-  - browser (STRING, NULLABLE)
-  - os (STRING, NULLABLE)
-  - device (STRING, NULLABLE)
-  - screen (STRING, NULLABLE)
-  - language (STRING, NULLABLE)
-  - country (STRING, NULLABLE)
-  - created_at (TIMESTAMP, NULLABLE)
-  - session_parameters (ARRAY<STRUCT<data_key STRING, string_value STRING, number_value FLOAT64, date_value TIMESTAMP, data_type INT64>>, REQUIRED) - Unnest to access: CROSS JOIN UNNEST(session_parameters) AS p, then use p.data_key, p.string_value, etc.
+        Table: `prefix.event`
+        Columns:
+        - event_id (STRING, REQUIRED)
+        - session_id (STRING, NULLABLE)
+        - url_path (STRING, NULLABLE)
+        - url_query (STRING, NULLABLE)
+        - referrer_path (STRING, NULLABLE)
+        - referrer_query (STRING, NULLABLE)
+        - referrer_domain (STRING, NULLABLE) - Origin domain of visitor
+        - page_title (STRING, NULLABLE)
+        - event_type (INT64, NULLABLE) - 1: page view, 2: custom event
+        - event_name (STRING, NULLABLE) - Known values: navigere, sok, sidebar-subnav, god-praksis-chip, client-error, last ned, feedback-designsystem, 404, accordion lukket, skjema fullfort, accordion åpnet (only set when event_type = 2)
+        - visit_id (STRING, NULLABLE) - Unique identifier for a specific visit within a session
+        - tag (STRING, NULLABLE)
+        - utm_source (STRING, NULLABLE)
+        - utm_content (STRING, NULLABLE)
+        - utm_campaign (STRING, NULLABLE)
+        - utm_medium (STRING, NULLABLE)
+        - utm_term (STRING, NULLABLE)
+        - hostname (STRING, NULLABLE)
+        - website_name (STRING, NULLABLE)
+        - website_domain (STRING, NULLABLE)
+        - website_share_id (STRING, NULLABLE)
+        - website_team_id (STRING, NULLABLE)
 
-Table: `prefix.event`
-Columns:
-  - event_id (STRING, REQUIRED)
-  - session_id (STRING, NULLABLE)
-  - url_path (STRING, NULLABLE)
-  - url_query (STRING, NULLABLE)
-  - referrer_path (STRING, NULLABLE)
-  - referrer_query (STRING, NULLABLE)
-  - referrer_domain (STRING, NULLABLE) - Origin domain of visitor
-  - page_title (STRING, NULLABLE)
-  - event_type (INT64, NULLABLE) - 1: page view, 2: custom event
-  - event_name (STRING, NULLABLE) - Known values: navigere, sok, sidebar-subnav, god-praksis-chip, client-error, last ned, feedback-designsystem, 404, accordion lukket, skjema fullfort, accordion åpnet (only set when event_type = 2)
-  - visit_id (STRING, NULLABLE) - Unique identifier for a specific visit within a session
-  - tag (STRING, NULLABLE)
-  - utm_source (STRING, NULLABLE)
-  - utm_content (STRING, NULLABLE)
-  - utm_campaign (STRING, NULLABLE)
-  - utm_medium (STRING, NULLABLE)
-  - utm_term (STRING, NULLABLE)
-  - hostname (STRING, NULLABLE)
-  - website_name (STRING, NULLABLE)
-  - website_domain (STRING, NULLABLE)
-  - website_share_id (STRING, NULLABLE)
-  - website_team_id (STRING, NULLABLE)
-
-  Important:
-  METRIC_SQL must be an aggregate expression that produces a single numeric value for each day. For example, "COUNT(*)" or "SUM(p.number_value)" where p is an unnested parameter. The x-axis will be days since the start date, and the y-axis will be the value of this metric.
+        Important:
+        METRIC_SQL must be an aggregate expression that produces a single numeric value for each day. For example, "COUNT(*)" or "SUM(p.number_value)" where p is an unnested parameter. The x-axis will be days since the start date, and the y-axis will be the value of this metric.
 
         """.trimIndent(),
         simplifiedSql = """
@@ -85,8 +85,8 @@ Columns:
             [METRIC_SQL] AS y
             FROM `[TABLE]`
             WHERE website_id = -- is handled is handled
-            AND created_at < TIMESTAMP('[START_DATE]')
-            AND created_at >= TIMESTAMP_ADD(TIMESTAMP('[END_DATE]'), INTERVAL 1 DAY)
+            AND created_at >= TIMESTAMP('[START_DATE]')
+            AND created_at < TIMESTAMP_ADD(TIMESTAMP('[END_DATE]'), INTERVAL 1 DAY)
             [WHERE_FILTERS] -- (optional)Specific filters based on the users question, e.g. "AND url_path LIKE '%/blogg/%'" or "AND browser = 'Chrome'"
             GROUP BY x
             )
@@ -100,8 +100,8 @@ Columns:
             [METRIC_SQL] AS y
             FROM [TABLE]
             WHERE website_id = '[WEBSITE_ID]'
-            AND created_at < TIMESTAMP('[START_DATE]')
-            AND created_at >= TIMESTAMP_ADD(TIMESTAMP('[END_DATE]'), INTERVAL 1 DAY)
+            AND created_at >= TIMESTAMP('[START_DATE]')
+            AND created_at < TIMESTAMP_ADD(TIMESTAMP('[END_DATE]'), INTERVAL 1 DAY)
             [WHERE_FILTERS]
             GROUP BY x
             )
@@ -182,6 +182,7 @@ Columns:
 
     private fun rankingsSchema(schemaProvider: BigQuerySchemaProvider) = SchemaTriple(
         bigQuerySchema = """
+            Current time: 2025-12-30
             Table: `prefix.event`
               - website_id (STRING, NULLABLE)
               - url_path (STRING, NULLABLE)      -- the page URL path, e.g. '/artikkel/tilgjengelighet'
@@ -205,16 +206,16 @@ Columns:
                 - For rankings of events, use event_type = 2 and event_name as the RANK_COLUMN.
                 - [SELECT_FILTERS] can be used to specify additional filters, e.g. "AND browser = 'Chrome'" or "AND url_path LIKE '%/blogg/%'". If no additional filters are needed, use TRUE.
                 - [WHERE_FILTERS] can be used to specify additional filters in the WHERE clause, e.g. "AND country = 'NO'" or "AND language = 'nb-NO'". If no additional filters are needed, use TRUE.
-                - If date is not specified today as start date and add 365 days. the format is YYYY-MM-DD.
- 
+                - If date is not specified today as start date and end date 365 days later. the format is YYYY-MM-DD.
+                - START_DATE must always be earlier than END_DATE.
         """.trimIndent(),
 
         simplifiedSql = """
             SELECT [RANK_COLUMN] AS x, COUNT(*) AS count
             FROM [TABLE]
             WHERE website_id //is handled
-                AND created_at < '[START_DATE]'
-                AND created_at >= '[END_DATE]'
+                AND created_at >= '[START_DATE]'
+                AND created_at < '[END_DATE]'
                 AND [WHERE_FILTERS]
             GROUP BY x
             ORDER BY count DESC
@@ -225,8 +226,8 @@ Columns:
             SELECT [RANK_COLUMN] AS x , COUNT(*) AS count
             FROM `[TABLE]`
             WHERE website_id = '[WEBSITE_ID]'
-                AND created_at  < TIMESTAMP('[START_DATE]')
-                AND created_at >= TIMESTAMP('[END_DATE]')
+                AND created_at >= TIMESTAMP('[START_DATE]')
+                AND created_at < TIMESTAMP('[END_DATE]')
                 AND [WHERE_FILTERS]
             GROUP BY x
             ORDER BY count DESC
@@ -265,6 +266,7 @@ Columns:
     private fun searchSchema(schemaProvider: BigQuerySchemaProvider) = SchemaTriple(
         // Only the tables and columns needed for this query
         bigQuerySchema = """
+            Current time: 2025-12-30
             Table: `prefix.event`
               - event_id (STRING, REQUIRED)
               - website_id (STRING, NULLABLE)
@@ -528,8 +530,8 @@ Columns:
               SELECT '[FACT1_NAME]' AS category, [SELECT1] AS value
               FROM [TABLE1]
               WHERE website_id //is handled
-                AND created_at < '[START_DATE]'
-                AND created_at >= '[END_DATE]'
+                AND created_at >= '[START_DATE]'
+                AND created_at < '[END_DATE]'
                 AND [WHERE1]
 
               UNION ALL
@@ -537,8 +539,8 @@ Columns:
               SELECT '[FACT2_NAME]' AS category, [SELECT2] AS value
               FROM [TABLE2]
               WHERE website_id //is handled
-                AND created_at < '[START_DATE]'
-                AND created_at >= '[END_DATE]'
+                AND created_at >= '[START_DATE]'
+                AND created_at < '[END_DATE]'
                 AND [WHERE2]
 
               UNION ALL
@@ -546,8 +548,8 @@ Columns:
               SELECT '[FACT3_NAME]' AS category, [SELECT3] AS value
               FROM [TABLE3]
               WHERE website_id //is handled
-                AND created_at < '[START_DATE]'
-                AND created_at >= '[END_DATE]'
+                AND created_at >= '[START_DATE]'
+                AND created_at < '[END_DATE]'
                 AND [WHERE3]
 
               UNION ALL
@@ -555,8 +557,8 @@ Columns:
               SELECT '[FACT4_NAME]' AS category, [SELECT4] AS value
               FROM [TABLE4]
               WHERE website_id //is handled
-                AND created_at < '[START_DATE]'
-                AND created_at >= '[END_DATE]'
+                AND created_at >= '[START_DATE]'
+                AND created_at < '[END_DATE]'
                 AND [WHERE4]
             )
             SELECT category, value
@@ -569,8 +571,8 @@ Columns:
             SELECT '[FACT1_NAME]' AS category, [SELECT1] AS value
             FROM `[TABLE1]`
             WHERE website_id = '[WEBSITE_ID]'
-              AND created_at < TIMESTAMP('[START_DATE]')
-              AND created_at >= TIMESTAMP('[END_DATE]')
+              AND created_at >= TIMESTAMP('[START_DATE]')
+              AND created_at < TIMESTAMP('[END_DATE]')
               AND [WHERE1]
 
             UNION ALL
@@ -579,8 +581,8 @@ Columns:
             SELECT '[FACT2_NAME]' AS category, [SELECT2] AS value
             FROM `[TABLE2]`
             WHERE website_id = '[WEBSITE_ID]'
-              AND created_at < TIMESTAMP('[START_DATE]')
-              AND created_at >= TIMESTAMP('[END_DATE]')
+              AND created_at >= TIMESTAMP('[START_DATE]')
+              AND created_at < TIMESTAMP('[END_DATE]')
               AND [WHERE2]
 
             UNION ALL
@@ -589,8 +591,8 @@ Columns:
             SELECT '[FACT3_NAME]' AS category, [SELECT3] AS value
             FROM `[TABLE3]`
             WHERE website_id = '[WEBSITE_ID]'
-              AND created_at < TIMESTAMP('[START_DATE]')
-              AND created_at >= TIMESTAMP('[END_DATE]')
+              AND created_at >= TIMESTAMP('[START_DATE]')
+              AND created_at < TIMESTAMP('[END_DATE]')
               AND [WHERE3]
               AND '[FACT3_NAME]' != 'empty'
 
@@ -600,8 +602,8 @@ Columns:
             SELECT '[FACT4_NAME]' AS category, [SELECT4] AS value
             FROM `[TABLE4]`
             WHERE website_id = '[WEBSITE_ID]'
-              AND created_at < TIMESTAMP('[START_DATE]')
-              AND created_at >= TIMESTAMP('[END_DATE]')
+              AND created_at >= TIMESTAMP('[START_DATE]')
+              AND created_at < TIMESTAMP('[END_DATE]')
               AND [WHERE4]
               AND '[FACT4_NAME]' != 'empty'
 
