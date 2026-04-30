@@ -210,7 +210,6 @@ Columns:
 
         simplifiedSql = """
             SELECT [RANK_COLUMN] AS x, COUNT(*) AS count
-                AND [SELECT_FILTERS]
             FROM [TABLE]
             WHERE website_id //is handled
                 AND created_at >= '[START_DATE]'
@@ -223,7 +222,6 @@ Columns:
 
         sqlTemplate = """
             SELECT [RANK_COLUMN] AS x , COUNT(*) AS count
-                AND [SELECT_FILTERS]
             FROM `[TABLE]`
             WHERE website_id = '[WEBSITE_ID]'
                 AND created_at >= TIMESTAMP('[START_DATE]')
