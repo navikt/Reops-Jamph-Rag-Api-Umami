@@ -85,8 +85,8 @@ Columns:
             [METRIC_SQL] AS y
             FROM `[TABLE]`
             WHERE website_id = -- is handled is handled
-            AND created_at >= TIMESTAMP('[START_DATE]')
-            AND created_at < TIMESTAMP_ADD(TIMESTAMP('[END_DATE]'), INTERVAL 1 DAY)
+            AND created_at < TIMESTAMP('[START_DATE]')
+            AND created_at >= TIMESTAMP_ADD(TIMESTAMP('[END_DATE]'), INTERVAL 1 DAY)
             [WHERE_FILTERS] -- (optional)Specific filters based on the users question, e.g. "AND url_path LIKE '%/blogg/%'" or "AND browser = 'Chrome'"
             GROUP BY x
             )
@@ -100,8 +100,8 @@ Columns:
             [METRIC_SQL] AS y
             FROM [TABLE]
             WHERE website_id = '[WEBSITE_ID]'
-            AND created_at >= TIMESTAMP('[START_DATE]')
-            AND created_at < TIMESTAMP_ADD(TIMESTAMP('[END_DATE]'), INTERVAL 1 DAY)
+            AND created_at < TIMESTAMP('[START_DATE]')
+            AND created_at >= TIMESTAMP_ADD(TIMESTAMP('[END_DATE]'), INTERVAL 1 DAY)
             [WHERE_FILTERS]
             GROUP BY x
             )
@@ -213,8 +213,8 @@ Columns:
             SELECT [RANK_COLUMN] AS x, COUNT(*) AS count
             FROM [TABLE]
             WHERE website_id //is handled
-                AND created_at >= '[START_DATE]'
-                AND created_at < '[END_DATE]'
+                AND created_at < '[START_DATE]'
+                AND created_at >= '[END_DATE]'
                 AND [WHERE_FILTERS]
             GROUP BY x
             ORDER BY count DESC
@@ -225,8 +225,8 @@ Columns:
             SELECT [RANK_COLUMN] AS x , COUNT(*) AS count
             FROM `[TABLE]`
             WHERE website_id = '[WEBSITE_ID]'
-                AND created_at >= TIMESTAMP('[START_DATE]')
-                AND created_at < TIMESTAMP('[END_DATE]')
+                AND created_at  < TIMESTAMP('[START_DATE]')
+                AND created_at >= TIMESTAMP('[END_DATE]')
                 AND [WHERE_FILTERS]
             GROUP BY x
             ORDER BY count DESC
@@ -528,8 +528,8 @@ Columns:
               SELECT '[FACT1_NAME]' AS category, [SELECT1] AS value
               FROM [TABLE1]
               WHERE website_id //is handled
-                AND created_at >= '[START_DATE]'
-                AND created_at < '[END_DATE]'
+                AND created_at < '[START_DATE]'
+                AND created_at >= '[END_DATE]'
                 AND [WHERE1]
 
               UNION ALL
@@ -537,8 +537,8 @@ Columns:
               SELECT '[FACT2_NAME]' AS category, [SELECT2] AS value
               FROM [TABLE2]
               WHERE website_id //is handled
-                AND created_at >= '[START_DATE]'
-                AND created_at < '[END_DATE]'
+                AND created_at < '[START_DATE]'
+                AND created_at >= '[END_DATE]'
                 AND [WHERE2]
 
               UNION ALL
@@ -546,8 +546,8 @@ Columns:
               SELECT '[FACT3_NAME]' AS category, [SELECT3] AS value
               FROM [TABLE3]
               WHERE website_id //is handled
-                AND created_at >= '[START_DATE]'
-                AND created_at < '[END_DATE]'
+                AND created_at < '[START_DATE]'
+                AND created_at >= '[END_DATE]'
                 AND [WHERE3]
 
               UNION ALL
@@ -555,8 +555,8 @@ Columns:
               SELECT '[FACT4_NAME]' AS category, [SELECT4] AS value
               FROM [TABLE4]
               WHERE website_id //is handled
-                AND created_at >= '[START_DATE]'
-                AND created_at < '[END_DATE]'
+                AND created_at < '[START_DATE]'
+                AND created_at >= '[END_DATE]'
                 AND [WHERE4]
             )
             SELECT category, value
@@ -569,8 +569,8 @@ Columns:
             SELECT '[FACT1_NAME]' AS category, [SELECT1] AS value
             FROM `[TABLE1]`
             WHERE website_id = '[WEBSITE_ID]'
-              AND created_at >= TIMESTAMP('[START_DATE]')
-              AND created_at < TIMESTAMP('[END_DATE]')
+              AND created_at < TIMESTAMP('[START_DATE]')
+              AND created_at >= TIMESTAMP('[END_DATE]')
               AND [WHERE1]
 
             UNION ALL
@@ -579,8 +579,8 @@ Columns:
             SELECT '[FACT2_NAME]' AS category, [SELECT2] AS value
             FROM `[TABLE2]`
             WHERE website_id = '[WEBSITE_ID]'
-              AND created_at >= TIMESTAMP('[START_DATE]')
-              AND created_at < TIMESTAMP('[END_DATE]')
+              AND created_at < TIMESTAMP('[START_DATE]')
+              AND created_at >= TIMESTAMP('[END_DATE]')
               AND [WHERE2]
 
             UNION ALL
@@ -589,8 +589,8 @@ Columns:
             SELECT '[FACT3_NAME]' AS category, [SELECT3] AS value
             FROM `[TABLE3]`
             WHERE website_id = '[WEBSITE_ID]'
-              AND created_at >= TIMESTAMP('[START_DATE]')
-              AND created_at < TIMESTAMP('[END_DATE]')
+              AND created_at < TIMESTAMP('[START_DATE]')
+              AND created_at >= TIMESTAMP('[END_DATE]')
               AND [WHERE3]
               AND '[FACT3_NAME]' != 'empty'
 
@@ -600,8 +600,8 @@ Columns:
             SELECT '[FACT4_NAME]' AS category, [SELECT4] AS value
             FROM `[TABLE4]`
             WHERE website_id = '[WEBSITE_ID]'
-              AND created_at >= TIMESTAMP('[START_DATE]')
-              AND created_at < TIMESTAMP('[END_DATE]')
+              AND created_at < TIMESTAMP('[START_DATE]')
+              AND created_at >= TIMESTAMP('[END_DATE]')
               AND [WHERE4]
               AND '[FACT4_NAME]' != 'empty'
 
