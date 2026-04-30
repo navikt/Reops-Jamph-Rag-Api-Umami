@@ -187,27 +187,35 @@ Columns:
               - url_path (STRING, NULLABLE)      -- the page URL path, e.g. '/artikkel/tilgjengelighet'
               - page_title (STRING, NULLABLE)    -- human-readable page title
               - event_type (INT64, NULLABLE)     -- 1 = page view, 2 = custom event
+              - event_name (STRING, NULLABLE)    -- Known values: navigere, sok, sidebar-subnav, god-praksis-chip, client-error, last ned, feedback-designsystem, 404, accordion lukket, skjema fullfort, accordion åpnet (only set when event_type = 2)
               - created_at (TIMESTAMP, NULLABLE)
 
             Table: `prefix.session`
               - website_id (STRING, NULLABLE)
-              - browser (STRING, NULLABLE)       -- e.g. 'Chrome', 'Firefox'
+              - browser (STRING, NULLABLE)       -- e.g. 'chrome', 'firefox', 'edge-chromium', 'ios', 'safari', 'crios', 'ios-webview', 'opera', 'facebook', 'samsung'
               - os (STRING, NULLABLE)            -- e.g. 'Windows', 'iOS', 'Android'
               - device (STRING, NULLABLE)        -- e.g. 'desktop', 'mobile', 'tablet'
               - screen (STRING, NULLABLE)        -- screen resolution, e.g. '1920x1080'
               - language (STRING, NULLABLE)      -- e.g. 'nb-NO', 'en-US'
               - country (STRING, NULLABLE)       -- e.g. 'NO', 'SE'
               - created_at (TIMESTAMP, NULLABLE)
+
+                Important:
+                - For rankings of pages, use event_type = 1 (page views) and url_path or page_title as the RANK_COLUMN.
+                - For rankings of events, use event_type = 2 and event_name as the RANK_COLUMN.
+                - [SELECT_FILTERS] can be used to specify additional filters, e.g. "AND browser = 'Chrome'" or "AND url_path LIKE '%/blogg/%'". If no additional filters are needed, use TRUE.
+                - [WHERE_FILTERS] can be used to specify additional filters in the WHERE clause, e.g. "AND country = 'NO'" or "AND language = 'nb-NO'". If no additional filters are needed, use TRUE.
+ 
         """.trimIndent(),
 
         simplifiedSql = """
             SELECT [RANK_COLUMN] AS x, COUNT(*) AS count
-            [SELECT_FILTERS]
+                AND [SELECT_FILTERS]
             FROM [TABLE]
             WHERE website_id //is handled
-                [WHERE_FILTERS]
                 AND created_at >= '[START_DATE]'
                 AND created_at < '[END_DATE]'
+                AND [WHERE_FILTERS]
             GROUP BY x
             ORDER BY count DESC
             LIMIT [LIMIT]
@@ -215,12 +223,12 @@ Columns:
 
         sqlTemplate = """
             SELECT [RANK_COLUMN] AS x , COUNT(*) AS count
-            [SELECT_FILTERS]
+                AND [SELECT_FILTERS]
             FROM `[TABLE]`
             WHERE website_id = '[WEBSITE_ID]'
-                [WHERE_FILTERS]
                 AND created_at >= TIMESTAMP('[START_DATE]')
                 AND created_at < TIMESTAMP('[END_DATE]')
+                AND [WHERE_FILTERS]
             GROUP BY x
             ORDER BY count DESC
             LIMIT [LIMIT]
@@ -317,7 +325,6 @@ Columns:
         
         bigQuerySchema = """
         Current time: 2025-12-30
-        
         Known values of url_path: '/komponenter/core', '/komponenter/ikoner', '/designsystemet', '/grunnleggende/styling/design-tokens', '/god-praksis', '/komponenter/core/button', '/komponenter/core/linkcard', '/komponenter/core/table', '/komponenter/primitives/box', '/komponenter/core/datepicker', '/komponenter/core/typography', '/komponenter/core/accordion', '/grunnleggende/darkside/ny-versjon-av-aksel-darkside', '/komponenter/core/actionmenu', '/komponenter/core/combobox', '/komponenter/core/alert', '/produktbloggen', '/komponenter/core/textfield', '/grunnleggende/darkside/design-tokens', '/komponenter/primitives/hstack', '/komponenter/core/expansioncard', '/komponenter/core/modal', '/komponenter/primitives/page', '/komponenter/core/radio', '/komponenter/core/link', '/komponenter/core/chips', '/komponenter/core/select', '/komponenter/core/checkbox', '/komponenter/core/tag', '/grunnleggende/styling/farger', '/komponenter/core/stepper', '/komponenter/core/eksperimenter', '/komponenter/core/process', '/god-praksis/brukerinnsikt', '/'
         if no time is specified, use the latest year.
         """.trimIndent(),
