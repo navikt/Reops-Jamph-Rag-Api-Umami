@@ -205,7 +205,7 @@ Columns:
                 - For rankings of events, use event_type = 2 and event_name as the RANK_COLUMN.
                 - [SELECT_FILTERS] can be used to specify additional filters, e.g. "AND browser = 'Chrome'" or "AND url_path LIKE '%/blogg/%'". If no additional filters are needed, use TRUE.
                 - [WHERE_FILTERS] can be used to specify additional filters in the WHERE clause, e.g. "AND country = 'NO'" or "AND language = 'nb-NO'". If no additional filters are needed, use TRUE.
-                - If date is not specified use the last 365 days.
+                - If date is not specified today as start date and add 365 days. the format is YYYY-MM-DD.
  
         """.trimIndent(),
 
