@@ -17,9 +17,15 @@ fun isSqlQueryValid(sql: String): Boolean {
     if (sql.isBlank()) return false  // Check if SQL is empty
     if (BLOCKED.containsMatchIn(sql)) return false  // Check if SQL query contains dangerous commands
 
+    // Preprocess BigQuery-specific syntax that JSQLParser does not support
+    val preprocessed = sql
+        .replace(Regex("--[^\n]*"), "")                        // strip line comments
+        .replace(Regex("\\bQUALIFY\\b[^)]*"), "")             // strip QUALIFY clauses (BigQuery window filter)
+        .replace(Regex(",\\s*(SECOND|MINUTE|HOUR)\\s*\\)"), ", 1)") // normalize time-unit keyword args
+
     return try {
         // Try formatting/parsing to catch syntax error
-        CCJSqlParserManager().parse(StringReader(sql))
+        CCJSqlParserManager().parse(StringReader(preprocessed))
         true
     } catch (e: JSQLParserException) {
         false
