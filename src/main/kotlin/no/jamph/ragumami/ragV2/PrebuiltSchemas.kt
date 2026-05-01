@@ -185,8 +185,8 @@ object PrebuiltSchemas {
             Current time: 2025-12-30
             Table: `prefix.event`
                 - website_id (STRING, NULLABLE)
-                - url_path (STRING, NULLABLE)      -- the page URL path, e.g. '/artikkel/tilgjengelighet'
-                - page_title (STRING, NULLABLE)    -- human-readable page title
+                - url_path (STRING, NULLABLE)      
+                - page_title (STRING, NULLABLE)    
                 - event_type (INT64, NULLABLE)     -- 1 = page view, 2 = custom event
                 - event_name (STRING, NULLABLE)    -- Known values: navigere, sok, sidebar-subnav, god-praksis-chip, client-error, last ned, feedback-designsystem, 404, accordion lukket, skjema fullfort, accordion åpnet (only set when event_type = 2)
                 - created_at (TIMESTAMP, NULLABLE)
