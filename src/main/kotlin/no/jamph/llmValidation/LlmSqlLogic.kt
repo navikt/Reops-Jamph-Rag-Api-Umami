@@ -85,7 +85,7 @@ fun LlmSqlLogic(
                 Rule("contains fagtorsdag project") { sql -> sql.contains("fagtorsdag-prod-81a6.umami_student") },
                 Rule("contains website_id") { sql -> sql.contains(AKSEL_ID) },
                 Rule("contains '2025'") { sql -> sql.contains("2025") },
-                Rule("contains month=11 or 'november'") { sql -> Regex("= ?11\\b|november", RegexOption.IGNORE_CASE).containsMatchIn(sql) },
+                Rule("contains month=11 or 'november'") { sql -> Regex("= ?11\\b|november|-11-", RegexOption.IGNORE_CASE).containsMatchIn(sql) },
                 Rule("contains referrer_domain") { sql -> sql.lowercase().contains("referrer_domain") },
                 Rule("contains GROUP BY") { sql -> sql.uppercase().contains("GROUP BY") },
             )

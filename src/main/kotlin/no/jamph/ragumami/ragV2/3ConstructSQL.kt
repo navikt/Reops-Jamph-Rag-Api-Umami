@@ -25,6 +25,8 @@ class ConstructSQL(
         // Fix double-AND when LLM fills WHERE_FILTERS with a leading "AND ..."
         sql = sql.replace(Regex("(?i)\\bAND\\s+AND\\b"), "AND")
 
+        // Fix triple-backtick (template `` ` `` + LLM `` `value` `` + template `` ` ``) before double
+        sql = sql.replace("```", "`")
         // Fix double-backtick when LLM provides already-backtick-wrapped table names
         sql = sql.replace("``", "`")
         
