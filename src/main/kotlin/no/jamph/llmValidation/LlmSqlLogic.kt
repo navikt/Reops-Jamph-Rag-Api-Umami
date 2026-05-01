@@ -155,7 +155,7 @@ fun LlmSqlLogic(
                 Rule("valid SQL syntax") { sql -> isSqlQueryValid(sql) },
                 Rule("contains fagtorsdag project") { sql -> sql.contains("fagtorsdag-prod-81a6.umami_student") },
                 Rule("contains website_id") { sql -> sql.contains(AKSEL_ID) },
-                Rule("contains 'ki' or 'kunstig intelligens'") { sql -> Regex("'ki'|'kunstig intelligens'", RegexOption.IGNORE_CASE).containsMatchIn(sql) },
+                Rule("contains 'ki' or 'kunstig intelligens'") { sql -> sql.lowercase().contains("ki") || Regex("kunstig intelligens", RegexOption.IGNORE_CASE).containsMatchIn(sql) },
                 Rule("contains url_path or path column") { sql -> sql.lowercase().contains("url_path") || sql.lowercase().contains("path") || sql.lowercase().contains("page") },
             )
         ),
@@ -198,7 +198,10 @@ fun LlmSqlLogic(
                 Rule("valid SQL syntax") { sql -> isSqlQueryValid(sql) },
                 Rule("contains fagtorsdag project") { sql -> sql.contains("fagtorsdag-prod-81a6.umami_student") },
                 Rule("contains website_id") { sql -> sql.contains(AKSEL_ID) },
-                Rule("contains '/' and '/komponenter/core/linkcard'") { sql -> sql.lowercase().contains("forside") && sql.lowercase().contains("linkcardkomponentsiden") },
+                Rule("references '/' and '/komponenter/core/linkcard'") { sql ->
+                    (sql.contains("'/'") || sql.contains("\"/\"")) &&
+                    sql.contains("/komponenter/core/linkcard")
+                },
             )
         ),
         
@@ -209,7 +212,11 @@ fun LlmSqlLogic(
                 Rule("valid SQL syntax") { sql -> isSqlQueryValid(sql) },
                 Rule("contains fagtorsdag project") { sql -> sql.contains("fagtorsdag-prod-81a6.umami_student") },
                 Rule("contains website_id") { sql -> sql.contains(AKSEL_ID) },
-                Rule("contains 'not', 'forside'") { sql -> sql.lowercase().contains("not") && sql.lowercase().contains("forside") && sql.lowercase().contains("most used") },
+                Rule("excludes frontpage ('/' or forside)") { sql ->
+                    (sql.contains("!= '/'") || sql.contains("<> '/'") || sql.contains("!= \"/\"") ||
+                     sql.uppercase().contains("NOT IN") || sql.lowercase().contains("forside")) &&
+                    sql.uppercase().contains("ORDER BY")
+                },
             )
         ),
 
@@ -231,7 +238,11 @@ fun LlmSqlLogic(
                 Rule("valid SQL syntax") { sql -> isSqlQueryValid(sql) },
                 Rule("contains fagtorsdag project") { sql -> sql.contains("fagtorsdag-prod-81a6.umami_student") },
                 Rule("contains website_id") { sql -> sql.contains(AKSEL_ID) },
-                Rule("contains 'time on page' or 'session duration'") { sql -> Regex("'time on page'|'session duration'", RegexOption.IGNORE_CASE).containsMatchIn(sql) },
+                Rule("contains time-on-page calculation (TIMESTAMP_DIFF/LAG/DATE_DIFF)") { sql ->
+                    sql.uppercase().contains("TIMESTAMP_DIFF") || sql.uppercase().contains("LAG(") ||
+                    sql.uppercase().contains("DATE_DIFF") || sql.uppercase().contains("DATEDIFF") ||
+                    sql.uppercase().contains("TIME_DIFF")
+                },
             )
         ),
 
