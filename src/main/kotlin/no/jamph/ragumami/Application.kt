@@ -297,7 +297,7 @@ fun Application.configureRouting() {
         post("/api/benchmark") {
             try {
                 val request = call.receive<BenchmarkRequest>()
-                val model = request.model ?: ollamaModel
+                val model = (request.model ?: ollamaModel).trim()
                 val benchmarkOllamaUrl = request.ollamaBaseUrl ?: ollamaBaseUrl
                 val results = withContext(Dispatchers.IO) {
                     runBenchmark(listOf(model), benchmarkOllamaUrl)
@@ -313,7 +313,7 @@ fun Application.configureRouting() {
         
         post("/api/benchmark/stream") {
             val request = call.receive<BenchmarkRequest>()
-            val model = request.model ?: ollamaModel
+            val model = (request.model ?: ollamaModel).trim()
             val benchmarkOllamaUrl = request.ollamaBaseUrl ?: ollamaBaseUrl
             val gson = Gson()
             val events = Channel<String>(Channel.UNLIMITED)
