@@ -185,7 +185,7 @@ object PrebuiltSchemas {
             Current time: 2025-12-30
             Table: `prefix.event`
                 - website_id (STRING, NULLABLE)
-                - url_path (STRING, NULLABLE)      
+                - url_path (STRING, NULLABLE)     
                 - page_title (STRING, NULLABLE)    
                 - event_type (INT64, NULLABLE)     -- 1 = page view, 2 = custom event
                 - event_name (STRING, NULLABLE)    -- Known values: navigere, sok, sidebar-subnav, god-praksis-chip, client-error, last ned, feedback-designsystem, 404, accordion lukket, skjema fullfort, accordion åpnet (only set when event_type = 2)
@@ -508,7 +508,7 @@ object PrebuiltSchemas {
         ) END AS `10`
         FROM top_10_per_step
         GROUP BY rank
-        ORDER BY rank;
+        ORDER BY rank
 
         """.trimIndent(),
         jsonSchema = """
@@ -610,7 +610,7 @@ object PrebuiltSchemas {
               AND [WHERE4]
               AND '[FACT4_NAME]' != 'empty'
 
-            ORDER BY category;
+            ORDER BY category
 
         """.trimIndent(),
 
