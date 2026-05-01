@@ -184,12 +184,15 @@ object PrebuiltSchemas {
         bigQuerySchema = """
             Current time: 2025-12-30
             Table: `prefix.event`
-              - website_id (STRING, NULLABLE)
-              - url_path (STRING, NULLABLE)      -- the page URL path, e.g. '/artikkel/tilgjengelighet'
-              - page_title (STRING, NULLABLE)    -- human-readable page title
-              - event_type (INT64, NULLABLE)     -- 1 = page view, 2 = custom event
-              - event_name (STRING, NULLABLE)    -- Known values: navigere, sok, sidebar-subnav, god-praksis-chip, client-error, last ned, feedback-designsystem, 404, accordion lukket, skjema fullfort, accordion åpnet (only set when event_type = 2)
-              - created_at (TIMESTAMP, NULLABLE)
+                - website_id (STRING, NULLABLE)
+                - url_path (STRING, NULLABLE)      -- the page URL path, e.g. '/artikkel/tilgjengelighet'
+                - page_title (STRING, NULLABLE)    -- human-readable page title
+                - event_type (INT64, NULLABLE)     -- 1 = page view, 2 = custom event
+                - event_name (STRING, NULLABLE)    -- Known values: navigere, sok, sidebar-subnav, god-praksis-chip, client-error, last ned, feedback-designsystem, 404, accordion lukket, skjema fullfort, accordion åpnet (only set when event_type = 2)
+                - created_at (TIMESTAMP, NULLABLE)
+                - referrer_path (STRING, NULLABLE)
+                - referrer_query (STRING, NULLABLE)
+                - referrer_domain (STRING, NULLABLE) - Origin domain of visitor
 
             Table: `prefix.session`
               - website_id (STRING, NULLABLE)
@@ -212,7 +215,7 @@ object PrebuiltSchemas {
 
         simplifiedSql = """
             SELECT [RANK_COLUMN] AS x, COUNT(*) AS count
-            FROM [TABLE]
+            FROM `[TABLE]`
             WHERE website_id //is handled
                 AND created_at >= '[START_DATE]'
                 AND created_at < '[END_DATE]'
