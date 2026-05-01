@@ -3,7 +3,7 @@ package no.jamph.llmValidation
 import no.jamph.bigquery.BigQuerySchemaServiceMock
 import no.jamph.ragumami.core.llm.OllamaClient
 import no.jamph.ragumami.Routes
-import no.jamph.ragumami.umami.UmamiRAGService
+import no.jamph.ragumami.ragV2.RagV2SqlService
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.supervisorScope
 
@@ -24,7 +24,7 @@ fun DialectValidetaLlmToSql(
             baseUrl = System.getenv("OLLAMA_BASE_URL") ?: Routes.ollamaUrl,
             model = modellName
         )
-        val ragService = UmamiRAGService(ollamaClient, schemaService)
+        val ragService = RagV2SqlService(ollamaClient, schemaService)
 
         val llmQueriesSidevisninger2025 = listOf(
             "Kor mange brukarar har besøkt sida i 2025?",
@@ -112,7 +112,7 @@ fun DialectValidetaLlmToSql(
                 globalIndex++
                 debugLog("  Dialect test $globalIndex/${allQueries.size}: ${query.take(50)}...")
                 try {
-                    val generatedSql = ragService.generateSQL(query, url, websites)
+                    val generatedSql = ragService.generateSql(query, url)
                     debugLog("  Generated SQL: ${generatedSql.replace("\n", " ")}")
                     val passed = group.validate(generatedSql)
                     if (passed) validCount++

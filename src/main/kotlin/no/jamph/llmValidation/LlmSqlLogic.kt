@@ -3,7 +3,7 @@ package no.jamph.llmValidation
 import no.jamph.bigquery.BigQuerySchemaServiceMock
 import no.jamph.ragumami.core.llm.OllamaClient
 import no.jamph.ragumami.Routes
-import no.jamph.ragumami.umami.UmamiRAGService
+import no.jamph.ragumami.ragV2.RagV2SqlService
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.supervisorScope
 
@@ -31,13 +31,12 @@ fun LlmSqlLogic(
     debugLog: (String) -> Unit = ::println
 ): Double = runBlocking { supervisorScope {
     val schemaService = BigQuerySchemaServiceMock()
-    val websites = schemaService.getWebsites()
-    
+
     val ollamaClient = OllamaClient(
         baseUrl = System.getenv("OLLAMA_BASE_URL") ?: Routes.ollamaUrl,
         model = modelName
     )
-    val ragService = UmamiRAGService(ollamaClient, schemaService)
+    val ragService = RagV2SqlService(ollamaClient, schemaService)
 
     val testCases = listOf(
         TestCase(
@@ -268,7 +267,7 @@ fun LlmSqlLogic(
         debugLog("  SQL test ${index + 1}/${testCases.size}: ${testCase.question}")
         debugLog("  URL: ${testCase.url}")
         try {
-            val generatedSql = ragService.generateSQL(testCase.question, testCase.url, websites)
+            val generatedSql = ragService.generateSql(testCase.question, testCase.url)
             debugLog("  Generated SQL: ${generatedSql.replace("\n", " ")}")
 
             var rulesPassed = 0
