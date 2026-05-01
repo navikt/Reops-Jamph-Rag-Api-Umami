@@ -19,7 +19,14 @@ class ConstructSQL(
         
         // Clean up optional filters if not provided
         sql = sql.replace("[SELECT_FILTERS]", "")
-        sql = sql.replace("[WHERE_FILTERS]", "")
+        sql = sql.replace(Regex("AND\\s+\\[WHERE_FILTERS\\]"), "") // remove unfilled AND WHERE_FILTERS
+        sql = sql.replace("[WHERE_FILTERS]", "")                    // remove any remaining placeholder
+
+        // Fix double-AND when LLM fills WHERE_FILTERS with a leading "AND ..."
+        sql = sql.replace(Regex("(?i)\\bAND\\s+AND\\b"), "AND")
+
+        // Fix double-backtick when LLM provides already-backtick-wrapped table names
+        sql = sql.replace("``", "`")
         
         return sql
     }
