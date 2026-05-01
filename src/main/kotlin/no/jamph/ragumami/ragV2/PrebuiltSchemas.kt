@@ -73,8 +73,8 @@ object PrebuiltSchemas {
         - website_team_id (STRING, NULLABLE)
 
         Important:
-        METRIC_SQL must be an aggregate expression that produces a single numeric value for each day. For example, "COUNT(*)" or "SUM(p.number_value)" where p is an unnested parameter. The x-axis will be days since the start date, and the y-axis will be the value of this metric.
-
+        - METRIC_SQL must be an aggregate expression that produces a single numeric value for each day. For example, "COUNT(*)" or "SUM(p.number_value)" where p is an unnested parameter. The x-axis will be days since the start date, and the y-axis will be the value of this metric.
+        - WHERE_FILTERS (optional) Specific filters based on the users question, e.g. "AND url_path LIKE '%/blogg/%'" or "AND browser = 'Chrome'". Choose TRUE for no filters.
         """.trimIndent(),
         simplifiedSql = """
         For context only:
@@ -87,7 +87,7 @@ object PrebuiltSchemas {
             WHERE website_id = -- is handled is handled
             AND created_at >= TIMESTAMP('[START_DATE]')
             AND created_at < TIMESTAMP_ADD(TIMESTAMP('[END_DATE]'), INTERVAL 1 DAY)
-            [WHERE_FILTERS] -- (optional)Specific filters based on the users question, e.g. "AND url_path LIKE '%/blogg/%'" or "AND browser = 'Chrome'"
+            AND [WHERE_FILTERS] 
             GROUP BY x
             )
         ),
@@ -98,11 +98,11 @@ object PrebuiltSchemas {
             SELECT
             DATE_DIFF(DATE(created_at), DATE('[START_DATE]'), DAY) + 1 AS x,
             [METRIC_SQL] AS y
-            FROM [TABLE]
+            FROM `[TABLE]`
             WHERE website_id = '[WEBSITE_ID]'
             AND created_at >= TIMESTAMP('[START_DATE]')
             AND created_at < TIMESTAMP_ADD(TIMESTAMP('[END_DATE]'), INTERVAL 1 DAY)
-            [WHERE_FILTERS]
+            AND [WHERE_FILTERS]
             GROUP BY x
             )
         ),
@@ -528,7 +528,7 @@ object PrebuiltSchemas {
         simplifiedSql = """
             WITH facts AS (
               SELECT '[FACT1_NAME]' AS category, [SELECT1] AS value
-              FROM [TABLE1]
+              FROM `[TABLE1]`
               WHERE website_id //is handled
                 AND created_at >= '[START_DATE]'
                 AND created_at < '[END_DATE]'
@@ -537,7 +537,7 @@ object PrebuiltSchemas {
               UNION ALL
 
               SELECT '[FACT2_NAME]' AS category, [SELECT2] AS value
-              FROM [TABLE2]
+              FROM `[TABLE2]`
               WHERE website_id //is handled
                 AND created_at >= '[START_DATE]'
                 AND created_at < '[END_DATE]'
@@ -546,7 +546,7 @@ object PrebuiltSchemas {
               UNION ALL
 
               SELECT '[FACT3_NAME]' AS category, [SELECT3] AS value
-              FROM [TABLE3]
+              FROM `[TABLE3]`
               WHERE website_id //is handled
                 AND created_at >= '[START_DATE]'
                 AND created_at < '[END_DATE]'
@@ -555,7 +555,7 @@ object PrebuiltSchemas {
               UNION ALL
 
               SELECT '[FACT4_NAME]' AS category, [SELECT4] AS value
-              FROM [TABLE4]
+              FROM `[TABLE4]`
               WHERE website_id //is handled
                 AND created_at >= '[START_DATE]'
                 AND created_at < '[END_DATE]'
