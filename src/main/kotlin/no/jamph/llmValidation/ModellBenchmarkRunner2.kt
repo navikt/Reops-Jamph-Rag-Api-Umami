@@ -31,9 +31,9 @@ fun runBenchmark(
     endToEndTimerFn: (String, String, (String) -> Unit) -> Long = { url, model, log ->
         val client = no.jamph.ragumami.core.llm.OllamaClient(System.getenv("OLLAMA_BASE_URL") ?: Routes.ollamaUrl, model)
         val schema = no.jamph.bigquery.BigQuerySchemaServiceMock()
-        val rag = no.jamph.ragumami.umami.UmamiRAGService(client, schema)
+        val rag = no.jamph.ragumami.ragV2.RagV2SqlService(client, schema)
         log("  Running end-to-end pipeline...")
-        val ms = kotlinx.coroutines.runBlocking { EndToEndTimer(rag).measureFullPipeline(TIMER_PROBE, url, schema.getWebsites()).durationMs }
+        val ms = kotlinx.coroutines.runBlocking { EndToEndTimer(rag).measureFullPipeline(TIMER_PROBE, url).durationMs }
         log("  Result: $ms ms")
         ms
     },

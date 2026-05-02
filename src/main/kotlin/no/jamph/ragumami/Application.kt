@@ -438,14 +438,14 @@ fun Application.configureRouting() {
                         // Step 7: Timer tests
                         val ollamaClient = no.jamph.ragumami.core.llm.OllamaClient(benchmarkOllamaUrl, model)
                         val schemaService = no.jamph.bigquery.BigQuerySchemaServiceMock()
-                        val ragService = no.jamph.ragumami.umami.UmamiRAGService(ollamaClient, schemaService)
+                        val ragService = no.jamph.ragumami.ragV2.RagV2SqlService(ollamaClient, schemaService)
                         val timerProbe = "Show me pageviews per day for https://aksel.nav.no"
 
                         emitEvent("debug", "--- Measuring end-to-end ---")
                         val endToEndMs = if (!skipEndToEndTest) try {
                             emitEvent("debug", "  Running end-to-end pipeline...")
                             val result = no.jamph.llmValidation.EndToEndTimer(ragService)
-                                .measureFullPipeline(timerProbe, "https://aksel.nav.no", schemaService.getWebsites())
+                                .measureFullPipeline(timerProbe, "https://aksel.nav.no")
                             emitEvent("debug", "  Result: ${result.durationMs} ms")
                             result.durationMs
                         } catch (e: Exception) { emitEvent("debug", "End-to-end failed: ${e::class.simpleName}: ${e.message}"); -1L }

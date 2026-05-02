@@ -6,7 +6,7 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration
 import kotlinx.coroutines.runBlocking
 import no.jamph.bigquery.BigQuerySchemaServiceMock
 import no.jamph.ragumami.core.llm.OllamaClient
-import no.jamph.ragumami.umami.UmamiRAGService
+import no.jamph.ragumami.ragV2.RagV2SqlService
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import kotlin.test.Test
@@ -25,7 +25,7 @@ class EndToEndTimerTest {
         wireMock.start()
         val ollamaClient = OllamaClient("http://localhost:${wireMock.port()}", "qwen2.5-coder:7b")
         val schemaService = BigQuerySchemaServiceMock()
-        val ragService = UmamiRAGService(ollamaClient, schemaService)
+        val ragService = RagV2SqlService(ollamaClient, schemaService)
         timer = EndToEndTimer(ragService)
     }
 
@@ -44,10 +44,7 @@ class EndToEndTimerTest {
                         .withBody("{\"response\":\"SELECT COUNT(*) FROM events;\"}")
                 )
         )
-        val schemaService = BigQuerySchemaServiceMock()
-        val websites = schemaService.getWebsites()
-
-        val result = timer.measureFullPipeline("Count page views", "https://aksel.nav.no", websites)
+        val result = timer.measureFullPipeline("Count page views", "https://aksel.nav.no")
 
         assertTrue(result.durationMs >= 0)
     }
@@ -62,10 +59,8 @@ class EndToEndTimerTest {
                         .withBody("{\"response\":\"SELECT COUNT(*) FROM events;\"}")
                 )
         )
-        val schemaService = BigQuerySchemaServiceMock()
-        val websites = schemaService.getWebsites()
 
-        val result = timer.measureFullPipeline("Count page views", "https://aksel.nav.no", websites)
+        val result = timer.measureFullPipeline("Count page views", "https://aksel.nav.no")
 
         assertTrue(result.sql.isNotBlank())
     }
@@ -80,11 +75,9 @@ class EndToEndTimerTest {
                         .withBody("{\"response\":\"SELECT 1;\"}")
                 )
         )
-        val schemaService = BigQuerySchemaServiceMock()
-        val websites = schemaService.getWebsites()
         val query = "Count page views"
 
-        val result = timer.measureFullPipeline(query, "https://aksel.nav.no", websites)
+        val result = timer.measureFullPipeline(query, "https://aksel.nav.no")
 
         assertTrue(result.query == query)
     }
@@ -99,11 +92,9 @@ class EndToEndTimerTest {
                         .withBody("{\"response\":\"SELECT 1;\"}")
                 )
         )
-        val schemaService = BigQuerySchemaServiceMock()
-        val websites = schemaService.getWebsites()
         val query = "Count page views"
 
-        val result = timer.measureFullPipeline(query, "https://aksel.nav.no", websites)
+        val result = timer.measureFullPipeline(query, "https://aksel.nav.no")
 
         assertTrue(result.queryLength == query.length)
     }
