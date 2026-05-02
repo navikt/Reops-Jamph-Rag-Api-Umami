@@ -20,7 +20,7 @@ fun isSqlQueryValid(sql: String): Boolean {
     // Preprocess BigQuery-specific syntax that JSQLParser does not support
     val preprocessed = sql
         .replace(Regex("--[^\n]*"), "")                        // strip line comments
-        .replace(Regex("\\bQUALIFY\\b[^)]*"), "")             // strip QUALIFY clauses (BigQuery window filter)
+        .replace(Regex("\\bQUALIFY\\b.*"), "")             // strip QUALIFY clauses (BigQuery window filter)
         .replace(Regex(",\\s*(SECOND|MINUTE|HOUR)\\s*\\)"), ", 1)") // normalize time-unit keyword args
 
     return try {
