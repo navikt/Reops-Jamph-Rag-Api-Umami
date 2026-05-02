@@ -113,7 +113,7 @@ fun DialectValidetaLlmToSql(
                 debugLog("  Dialect test $globalIndex/${allQueries.size}: ${query.take(50)}...")
                 try {
                     val generatedSql = ragService.generateSql(query, url)
-                    debugLog("  Generated SQL: ${generatedSql.replace("\n", " ")}")
+                    debugLog("  Generated SQL: $generatedSql")
                     val passed = group.validate(generatedSql)
                     if (passed) validCount++
                     debugLog("  → ${if (passed) "PASS ✓" else "FAIL ✗"}")

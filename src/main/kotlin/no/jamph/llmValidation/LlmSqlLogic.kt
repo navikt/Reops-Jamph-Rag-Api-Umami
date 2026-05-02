@@ -268,7 +268,7 @@ fun LlmSqlLogic(
         debugLog("  URL: ${testCase.url}")
         try {
             val generatedSql = ragService.generateSql(testCase.question, testCase.url)
-            debugLog("  Generated SQL: ${generatedSql.replace("\n", " ")}")
+            debugLog("  Generated SQL: $generatedSql")
 
             var rulesPassed = 0
             testCase.rules.forEach { rule ->
