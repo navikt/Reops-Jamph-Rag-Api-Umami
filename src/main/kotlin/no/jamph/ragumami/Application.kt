@@ -396,8 +396,8 @@ fun Application.configureRouting() {
                             return@launch
                         }
                         
-                        val skipSqlAccuracyTest = true
-                        val skipDialectAccuracyTest = true
+                        val skipSqlAccuracyTest = false
+                        val skipDialectAccuracyTest = false
                         val skipTokenSpeedTest = true
                         val skipEndToEndTest = false
                         val skipLongPromptTest = true
