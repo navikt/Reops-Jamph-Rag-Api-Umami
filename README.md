@@ -133,3 +133,19 @@ Modeller:
 
 
     #redeploy x7
+
+    # Enkel SQL Flyt
+
+Dette diagrammet viser en enkel flyt fra bruker til SQL-generering og tilbake.
+
+```mermaid
+flowchart LR
+    User([Bruker])
+    Construct["ConstructSQL"]
+    BQ[("BigQuery")]
+
+    User --> Construct
+    Construct --> BQ
+    BQ --> User
+
+    User -- "sqlSchemaLogikk" --> Construct
