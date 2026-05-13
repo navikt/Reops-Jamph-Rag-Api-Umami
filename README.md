@@ -136,7 +136,7 @@ Modeller:
 
     # Enkel SQL Flyt
 
-Dette diagrammet viser en enkel flyt fra bruker til SQL-generering og tilbake.
+RAG versjon 1. Dette diagrammet viser en enkel flyt fra bruker til SQL-generering og tilbake. 
 
 ```mermaid
 flowchart LR
@@ -149,3 +149,46 @@ flowchart LR
     BQ --> User
 
     User -- "sqlSchemaLogikk" --> Construct
+
+```
+RAG versjon 2. Dette diagrammet viser en veldig dtaljert flyt fra bruker til SQL-generering og tilbake ned til kallnivå.
+
+```mermaid
+sequenceDiagram
+    participant FE as Frontend<br/>(Node.js/React)
+    participant API as Jamph-Rag-Api-Umami<br/>(Ktor/Kotlin)
+    participant BQ as BigQuery<br/>(fagtorsdag-prod)
+    participant LLM as Ollama<br/>(qwen2.5-coder:7b)
+
+    Note over FE,LLM: User asks SQL question from Frontend (RagV2 Pipeline)
+
+    FE->>API: POST /api/sql<br/>{query: "Topp 10 sider siste måned", url: "https://aksel.nav.no",<br/>pathOperator: "starts-with"}
+
+    API->>API: Application.kt receives request<br/>RagV2SqlService.generateSql()
+
+    Note over API: Step ① — Classify query type
+    API->>BQ: bigQueryService.getWebsites()
+    BQ-->>API: [{id: "fb69...", name: "Aksel", domain: "aksel.nav.no"}]
+    API->>API: urlToSiteIdAndPath(url, websites)<br/>→ siteId: "fb69...", urlPath: ""
+
+    API->>LLM: POST /api/generate (generateConstrained)<br/>{model: "qwen2.5-coder:7b", prompt: "Classify: 'Topp 10 sider...'<br/>→ linear/rankings/search/journey/cards/default", temperature: 0.0}
+    LLM-->>API: response: {"queryType": "rankings"}
+
+    Note over API: Step ② — Extract variables from question
+    API->>API: PrebuiltSchemaService.getBigQuerySchema("rankings")<br/>PrebuiltSchemaService.getJsonSchema("rankings")<br/>PrebuiltSchemaService.getSimplifiedSql("rankings")
+
+    API->>LLM: POST /api/generate<br/>{prompt: "Extract variables from 'Topp 10 sider...' Schema: [rankings BQ schema]<br/>Fill JSON: {LIMIT, ORDER_BY, START_DATE, END_DATE...}"}
+    LLM-->>API: response: {"LIMIT": "10", "ORDER_BY": "DESC",<br/>"START_DATE": "2026-04-07", "END_DATE": "2026-05-07", "METRIC_SQL": "COUNT(*)"}
+
+    Note over API: Step ③ — Construct SQL from template
+    API->>API: ConstructSQL.constructSql("rankings", variables, siteId, urlPath)<br/>PrebuiltSchemas.getSqlTemplate("rankings")<br/>→ Replace [LIMIT], [ORDER_BY], [START_DATE], [WEBSITE_ID], [PATH] with extracted values<br/>→ Strip unfilled [WHERE_FILTERS], fix backticks
+
+    API-->>FE: {sql: "SELECT url_path, COUNT(*) AS visits<br/>FROM `fagtorsdag-prod-81a6.umami_student.event`<br/>WHERE website_id = 'fb69...' AND created_at >= '2026-04-07'<br/>GROUP BY url_path ORDER BY visits DESC LIMIT 10"}
+
+    Note over FE,BQ: User executes the generated SQL
+
+    FE->>FE: executeBigQueryQuery(sql)<br/>bigQueryApi.ts → POST /api/bigquery
+    FE->>BQ: @google-cloud/bigquery SDK<br/>runQuery(sql)
+    BQ-->>FE: [{url_path: "/komponenter", visits: 4821}, ...]
+
+    FE->>FE: Render results as bar chart / table widget

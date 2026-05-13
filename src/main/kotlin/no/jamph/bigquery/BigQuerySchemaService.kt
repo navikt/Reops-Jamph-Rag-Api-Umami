@@ -3,9 +3,9 @@ package no.jamph.bigquery
 import com.google.cloud.bigquery.QueryJobConfiguration
 
 data class Website(
-    val websiteId: String,
-    val name: String,
-    val domain: String?
+    val websiteId: String,   // Unik ID for nettsiden, brukes som WHERE-filter i all SQL.
+    val name: String,        // "Aksel", "nav.no" osv.
+    val domain: String?      // "aksel.nav.no" — matches mot brukerens URL
 )
 
 data class TableColumn(
@@ -18,6 +18,19 @@ data class TableColumn(
 data class TableSchema(
     val tableName: String,
     val columns: List<TableColumn>
+)
+
+data class SiteIdAndPath(
+    val siteId: String,    // "fb69e1e9-..." → WHERE website_id = '...'
+    val urlPath: String    // "/designsystemet%" → WHERE url_path LIKE '...'
+)
+
+data class QueryTypeResult(
+    val queryType: String,  // "linear" | "rankings" | "search" | "journey" | "cards" | "default"
+    val siteId: String,
+    val urlPath: String,
+    val userPrompt: String,
+    val rawLlmResponse: String?
 )
 
 class BigQuerySchemaService(
