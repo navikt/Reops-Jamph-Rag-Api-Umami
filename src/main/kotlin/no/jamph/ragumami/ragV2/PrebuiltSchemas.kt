@@ -611,6 +611,8 @@ object PrebuiltSchemas {
               AND '[FACT4_NAME]' != 'empty'
 
             ORDER BY category
+            
+            -- Fakta x (valgfri) -- du kan kopiere og lime inn flere fakta ved å duplisere en av de eksisterende SELECT - UNION ALL blokkene, og endre navn, SELECT, TABLE og WHERE.
 
         """.trimIndent(),
 
