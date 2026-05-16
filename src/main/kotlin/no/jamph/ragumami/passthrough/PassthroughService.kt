@@ -46,18 +46,19 @@ class PassthroughService(
         val question = request.question?.takeIf { it.isNotBlank() }
 
         val fullPrompt = buildString {
-            append("You are to answer this question")
-            if (question != null) append(" \"$question\"")
+            append("Du er en statistisk rådgiver som hjelper brukeren med å tolke webstatistikk. ")
+            append("Vær bevisst på usikkerhet i dataene og unngå bastante konklusjoner som ikke støttes direkte av analysen. ")
+            append("Du skal svare på dette spørsmålet")
+            if (question != null) append(": \"$question\"")
             append(". ")
-            append("This question is answered with this code")
+            append("Spørsmålet er besvart med denne koden")
             if (cleanedCode != null) append(":\n$cleanedCode")
             append(".\n")
-            append("The code gave this answer")
+            append("Koden ga dette svaret")
             if (cleanedData != null) append(":\n$cleanedData")
             append(".\n")
-            append("Your job is to answer the user politely on what the data says. ")
             append(request.role ?: "")
-            append(" Respond in exactly one concise paragraph.")
+            append(" Svar i nøyaktig ett kortfattet avsnitt.")
         }
 
         logger.info("PASSTHROUGH: model={}, promptLength={}", defaultModel, fullPrompt.length)
