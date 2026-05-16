@@ -5,7 +5,9 @@ import no.jamph.ragumami.core.llm.OllamaClient
 import org.slf4j.LoggerFactory
 
 data class PassthroughRequest(
-    val prompt: String,
+    val role: String,
+    val question: String? = null,
+    val code: String? = null,
     val data: Any? = null
 )
 
@@ -35,18 +37,26 @@ class PassthroughService(
     }
 
     suspend fun generate(request: PassthroughRequest): PassthroughResponse {
-        if (request.prompt.isBlank()) {
+        if (request.role.isBlank()) {
             throw IllegalArgumentException("Prompt kan ikke vaere tom")
         }
 
-        val cleanedData = if (request.data != null) {
-            cleanText(gson.toJson(request.data))
-        } else null
+        val cleanedData = if (request.data != null) cleanText(gson.toJson(request.data)) else null
+        val cleanedCode = request.code?.takeIf { it.isNotBlank() }
+        val question = request.question?.takeIf { it.isNotBlank() }
 
-        val fullPrompt = if (cleanedData != null) {
-            "${request.prompt}\n\nData:\n$cleanedData"
-        } else {
-            request.prompt
+        val fullPrompt = buildString {
+            append("You are to answer this question")
+            if (question != null) append(" \"$question\"")
+            append(". ")
+            append("This question is answered with this code")
+            if (cleanedCode != null) append(":\n$cleanedCode")
+            append(".\n")
+            append("The code gave this answer")
+            if (cleanedData != null) append(":\n$cleanedData")
+            append(".\n")
+            append("Your job is to answer the user politely on what the data says. ")
+            append(request.role)
         }
 
         logger.info("PASSTHROUGH: model={}, promptLength={}", defaultModel, fullPrompt.length)
